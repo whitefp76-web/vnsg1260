@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "VNSG 1260 Clinical Charting Tool",
+  "short_name": "VNSG 1260",
+  "description": "VNSG 1260 Clinical I SBAR report sheet, nurse's notes, and reflection journal. Works offline; entries stay on this device.",
+  "lang": "en-US",
+  "dir": "ltr",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#F2F5F9",
+  "theme_color": "#004C97",
+  "categories": ["education", "medical", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "./screenshots/phone.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Charting on a phone" },
+    { "src": "./screenshots/laptop.png", "sizes": "1440x900", "type": "image/png", "form_factor": "wide", "label": "Charting on a laptop" }
+  ]
+}

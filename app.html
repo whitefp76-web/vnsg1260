@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VNSG 1260 Clinical Charting Tool</title>
+<!--
+  VNSG 1260 Clinical I · SBAR Clinical Report Sheet, Nurse's Notes, and Reflection Journal
+  Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · v2
+  Self-contained: no internet, no login, no AI, no server. All data stays in this browser on this device.
+-->
+<style>
+:root{
+  --blue:#004C97; --blue-ink:#003A73; --blue-wash:#E8F0F8; --surface:#FFFFFF; --page:#F2F5F9;
+  --ink:#17202B; --muted:#56606C; --line:#C9D2DC; --line-strong:#8C99A6;
+  --alert:#B42318; --alert-wash:#FDECEA; --prompt:#8A5A00; --prompt-wash:#FFF4DC;
+  --ok:#1E7B4F; --ok-wash:#E6F4EC; --priv:#6B2C91; --priv-wash:#F3EAF8;
+  --chip:#FFFFFF; --chip-on:#004C97; --chip-on-ink:#FFFFFF; --focus:#F2A900;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --blue:#7DB4F0; --blue-ink:#A9CDF5; --blue-wash:#16283D; --surface:#141B24; --page:#0C1118;
+    --ink:#E6ECF2; --muted:#9AA6B2; --line:#2B3846; --line-strong:#4A5A6B;
+    --alert:#FF8A80; --alert-wash:#3A1714; --prompt:#F0C060; --prompt-wash:#33270C;
+    --ok:#6FD3A0; --ok-wash:#12301F; --priv:#D1A6F0; --priv-wash:#2C1838;
+    --chip:#1A2330; --chip-on:#7DB4F0; --chip-on-ink:#0C1118; --focus:#F2C94C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --blue:#7DB4F0; --blue-ink:#A9CDF5; --blue-wash:#16283D; --surface:#141B24; --page:#0C1118;
+  --ink:#E6ECF2; --muted:#9AA6B2; --line:#2B3846; --line-strong:#4A5A6B;
+  --alert:#FF8A80; --alert-wash:#3A1714; --prompt:#F0C060; --prompt-wash:#33270C;
+  --ok:#6FD3A0; --ok-wash:#12301F; --priv:#D1A6F0; --priv-wash:#2C1838;
+  --chip:#1A2330; --chip-on:#7DB4F0; --chip-on-ink:#0C1118; --focus:#F2C94C;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- top bar ---------- */
+header.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:3px solid var(--blue)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.bar-in{max-width:1180px;margin:0 auto;padding:10px 16px 8px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand b{color:var(--blue);font-size:17px;letter-spacing:.2px}
+.brand span{color:var(--muted);font-size:12.5px}
+.band{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0;order:1}
+@media (max-width:760px){.band{order:3;flex-basis:100%}.next{margin-left:0}}
+.tag{font-size:12.5px;padding:2px 8px;border:1px solid var(--line);border-radius:4px;background:var(--page);white-space:nowrap}
+.tag.warn{border-color:var(--alert);color:var(--alert);background:var(--alert-wash)}
+.next{margin-left:auto;order:2;display:flex;align-items:center;gap:8px;font-size:13.5px;padding:4px 10px;border-radius:6px;background:var(--blue-wash);color:var(--blue-ink);white-space:nowrap}
+.next.over{background:var(--alert-wash);color:var(--alert);font-weight:600}
+.next.done{background:var(--ok-wash);color:var(--ok)}
+nav.tabs{max-width:1180px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:0 12px 8px;scrollbar-width:thin}
+nav.tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--chip);border-radius:6px;padding:6px 11px;font-size:13.5px;cursor:pointer;display:flex;gap:6px;align-items:center}
+nav.tabs button .l{font-weight:700;color:var(--blue)}
+nav.tabs button[aria-current="true"]{background:var(--blue);border-color:var(--blue);color:var(--chip-on-ink)}
+nav.tabs button[aria-current="true"] .l{color:var(--chip-on-ink)}
+nav.tabs .dot{width:7px;height:7px;border-radius:50%;background:var(--line-strong)}
+nav.tabs .dot.ok{background:var(--ok)} nav.tabs .dot.al{background:var(--alert)}
+.storage-warn{display:none;max-width:1180px;margin:8px auto 0;padding:8px 16px;background:var(--alert-wash);color:var(--alert);font-size:13.5px}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:980px){.wrap{grid-template-columns:230px minmax(0,1fr)}}
+aside.rail{display:none}
+@media (min-width:980px){aside.rail{display:block;position:sticky;top:120px;align-self:start}}
+.rail h3{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:600}
+.shift{position:relative;margin:0;padding:0 0 0 22px;list-style:none}
+.shift::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.shift li{position:relative;padding:5px 0 9px;font-size:13.5px}
+.shift li::before{content:"";position:absolute;left:-20px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong)}
+.shift li.saved::before{background:var(--ok);border-color:var(--ok)}
+.shift li.late::before{background:var(--prompt);border-color:var(--prompt)}
+.shift li.missed::before{background:var(--surface);border-color:var(--alert)}
+.shift li.over::before{background:var(--alert);border-color:var(--alert)}
+.shift li.due::before{border-color:var(--blue);background:var(--blue-wash)}
+.shift li .t{font-weight:700}
+.shift li .s{display:block;color:var(--muted);font-size:12.5px}
+.shift li.now{color:var(--blue);font-weight:600}
+.shift li.now::before{width:8px;height:8px;left:-18px;top:11px;border:0;background:var(--blue)}
+
+main{min-width:0}
+section.sec{display:none;max-width:860px}
+section.sec.on{display:block}
+.sec-h{display:flex;align-items:baseline;gap:12px;border-bottom:3px solid var(--blue);padding-bottom:4px;margin:0 0 4px}
+.sec-h .L{font-size:30px;font-weight:800;color:var(--blue);line-height:1;min-width:30px}
+.sec-h h2{margin:0;font-size:19px;color:var(--blue)}
+.sec-sub{margin:4px 0 16px;color:var(--muted);font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;margin:0 0 14px}
+.card h3{margin:0 0 10px;font-size:15px}
+.grid{display:grid;gap:12px}
+@media (min-width:640px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g6{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:900px){.g6{grid-template-columns:repeat(6,1fr)}}
+.field{margin:0 0 12px;min-width:0}
+.grid>.field{margin:0}
+.field>label,.field>.lab{display:block;font-weight:650;font-size:14px;margin:0 0 4px}
+.field .h{display:block;font-weight:400;font-style:italic;color:var(--muted);font-size:12.5px;margin-top:1px}
+input[type=text],textarea{width:100%;border:1px solid var(--line-strong);border-radius:5px;background:var(--surface);padding:8px 10px;min-height:40px}
+textarea{resize:vertical;min-height:72px}
+input:disabled,textarea:disabled{opacity:.75}
+.timein{display:flex;gap:6px}
+.timein input{max-width:110px;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-strong);background:var(--chip);border-radius:5px;padding:7px 11px;min-height:38px;cursor:pointer;font-size:14px;text-align:left}
+.chip[aria-pressed="true"]{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-ink)}
+.chip.trig[aria-pressed="true"]{background:var(--alert);border-color:var(--alert);color:var(--chip-on-ink)}
+.btn{border:1px solid var(--blue);background:var(--surface);color:var(--blue);border-radius:6px;padding:9px 14px;font-weight:650;cursor:pointer;min-height:42px}
+.btn.pri{background:var(--blue);color:var(--chip-on-ink)}
+.btn.sm{padding:5px 10px;min-height:34px;font-size:13.5px}
+.btn.danger{border-color:var(--alert);color:var(--alert)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* prompts */
+.lint{margin-top:5px;display:flex;flex-direction:column;gap:3px}
+.lint div{font-size:12.8px;padding:3px 8px;border-left:3px solid}
+.lint .privacy{border-color:var(--priv);background:var(--priv-wash);color:var(--priv)}
+.lint .abbr{border-color:var(--alert);background:var(--alert-wash);color:var(--alert)}
+.lint .interp,.lint .quote{border-color:var(--prompt);background:var(--prompt-wash);color:var(--prompt)}
+.alert{border:2px solid var(--alert);background:var(--alert-wash);color:var(--alert);border-radius:6px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.alert b{display:block;margin-bottom:2px}
+.okbox{border:1px solid var(--ok);background:var(--ok-wash);color:var(--ok);border-radius:6px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.info{border-left:4px solid var(--blue);background:var(--blue-wash);padding:10px 12px;border-radius:0 6px 6px 0;margin:0 0 14px;font-size:14px}
+.std{font-size:13.5px}
+.std p{margin:0 0 6px}
+.errs{color:var(--alert);font-size:13.5px;margin:8px 0 0;padding-left:18px}
+
+/* rounds */
+.round{background:var(--surface);border:1px solid var(--line);border-radius:6px;margin:0 0 16px;overflow:hidden}
+.round>.rh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--blue-wash);padding:10px 14px;border-bottom:1px solid var(--line)}
+.round>.rh .rt{font-size:20px;font-weight:800;color:var(--blue-ink);font-variant-numeric:tabular-nums}
+.pill{font-size:12.5px;font-weight:650;padding:2px 8px;border-radius:20px;border:1px solid}
+.pill.saved{color:var(--ok);border-color:var(--ok);background:var(--ok-wash)}
+.pill.late{color:var(--prompt);border-color:var(--prompt);background:var(--prompt-wash)}
+.pill.missed{color:var(--alert);border-color:var(--alert)}
+.pill.over{color:var(--chip-on-ink);background:var(--alert);border-color:var(--alert)}
+.pill.due{color:var(--blue);border-color:var(--blue)}
+.round .rb{padding:14px}
+.dar{display:grid;gap:12px}
+@media (min-width:760px){.dar{grid-template-columns:1fr 1fr 1fr}}
+.dar .L{color:var(--blue);font-weight:800;margin-right:4px}
+.locked p{margin:0 0 4px;white-space:pre-wrap}
+.locked .k{font-weight:700}
+.hist{font-size:13px;color:var(--muted);margin:4px 0}
+.hist s{color:var(--ink)}
+.toggle{background:none;border:0;color:var(--blue);padding:0;cursor:pointer;font-weight:650}
+.compare{display:grid;gap:10px}
+@media (min-width:700px){.compare{grid-template-columns:1fr 1fr}}
+.compare div{border:1px dashed var(--line-strong);border-radius:5px;padding:8px 10px;font-size:14px;white-space:pre-wrap}
+.compare b{display:block;font-size:12.5px;color:var(--muted)}
+.checklist{list-style:none;padding:0;margin:0}
+.checklist li{padding:5px 0 5px 24px;position:relative;font-size:14px;border-bottom:1px solid var(--line)}
+.checklist li::before{content:"";position:absolute;left:2px;top:10px;width:12px;height:12px;border-radius:2px}
+.checklist li.y::before{background:var(--ok)}
+.checklist li.n::before{background:var(--alert)}
+.checklist li.w::before{background:var(--prompt)}
+footer.f{max-width:1180px;margin:10px auto 30px;padding:0 16px;color:var(--muted);font-size:12px}
+.mobile-rail{display:block}
+@media (min-width:980px){.mobile-rail{display:none}}
+.mobile-rail .shift{display:flex;gap:0;padding:0;overflow-x:auto}
+.mobile-rail .shift::before{display:none}
+.mobile-rail .shift li{padding:2px 12px 2px 18px;white-space:nowrap}
+.mobile-rail .shift li::before{left:2px;top:6px}
+.mobile-rail .shift li .s{display:none}
+#print{display:none}
+@media (prefers-reduced-motion:no-preference){.flash{animation:fl 1.2s ease-out 1}@keyframes fl{0%{box-shadow:0 0 0 3px var(--focus)}100%{box-shadow:0 0 0 0 transparent}}}
+
+/* ---------- print: mirrors the paper SBAR Clinical Report Sheet ---------- */
+@page{size:letter;margin:0.35in 0.45in}
+@media print{
+  :root{color-scheme:light;padding:0}
+  body{background:#fff;color:#000;font:8.2pt/1.25 Arial,Helvetica,sans-serif}
+  body::before{display:none}
+  body>*:not(#print){display:none !important}
+  #print{display:block}
+  .pp{page-break-after:always;break-after:page;position:relative}
+  .pp:last-child{page-break-after:auto;break-after:auto}
+  .ph{display:flex;align-items:baseline;gap:8px;border-bottom:1.5pt solid #F2A900;padding-bottom:2pt;margin-bottom:3pt}
+  .ph b{color:#004C97;font-size:15pt}
+  .ph span{font-weight:700;font-size:9pt}
+  .psec{color:#004C97;font-weight:700;font-size:10pt;border-bottom:1.2pt solid #004C97;margin:6pt 0 1pt;padding-bottom:1pt}
+  .psec .L{font-size:12pt;margin-right:5pt}
+  .psec,.psub{break-after:avoid;page-break-after:avoid}
+  .psub{font-style:italic;color:#444;font-size:7pt;margin:0 0 2pt}
+  .pt{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:2pt}
+  .pt td{border:.6pt solid #000;padding:2pt 3pt;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
+  .pt td.sh{background:#E8F0F8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pt td.gr{background:#F4F4F4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pl{font-weight:700}
+  .ph2{font-style:italic;color:#444;font-size:7pt}
+  .pv{white-space:pre-wrap;color:#003A73;margin-top:1pt}
+  .pv.empty{color:#999}
+  .pnote{font-size:7.2pt;margin:2pt 0 3pt}
+  .pfoot{text-align:center;font-size:6.5pt;color:#555;margin-top:6pt}
+  .late{color:#8A5A00;font-weight:700}
+  .trig{color:#B42318;font-weight:700}
+  .pt s{color:#555}
+  .avoid{break-inside:avoid;page-break-inside:avoid}
+}
+</style>
+<style>
+select{width:100%;border:1px solid var(--line-strong);border-radius:5px;background:var(--surface);color:var(--ink);padding:8px 10px;min-height:42px;font:inherit}
+select.abn{border-color:var(--prompt);border-width:2px}
+.sys{background:var(--surface);border:1px solid var(--line);border-radius:6px;margin:0 0 14px;overflow:hidden}
+.sys>.sh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 14px;background:var(--blue-wash);border-bottom:1px solid var(--line)}
+.sys>.sh h3{margin:0;font-size:15.5px;color:var(--blue-ink);flex:1;min-width:140px}
+.sys>.sb{padding:12px 14px}
+.req{font-size:12px;font-weight:650;padding:2px 8px;border-radius:20px;border:1px solid var(--blue);color:var(--blue)}
+.req.opt{border-color:var(--line-strong);color:var(--muted)}
+.req.done{border-color:var(--ok);color:var(--ok);background:var(--ok-wash)}
+.find{display:grid;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+.find:last-child{border-bottom:0}
+@media (min-width:700px){.find{grid-template-columns:200px 1fr}}
+.find .fl{font-weight:650;font-size:14px;padding-top:9px}
+.find .fl small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.abnbox{border-left:3px solid var(--prompt);background:var(--prompt-wash);padding:8px 10px;border-radius:0 5px 5px 0;display:grid;gap:6px;margin-top:4px}
+.abnbox .lab{font-size:13px;font-weight:650;color:var(--prompt)}
+details.tip{font-size:13px;color:var(--muted)}
+details.tip summary{cursor:pointer;color:var(--blue);font-weight:600;list-style:none}
+details.tip summary::-webkit-details-marker{display:none}
+details.tip p{margin:4px 0 0}
+.skipb{background:var(--priv-wash);border:1px solid var(--priv);color:var(--priv);border-radius:6px;padding:9px 12px;margin:0 0 12px;font-size:14px}
+.skipform{border:1px dashed var(--priv);border-radius:6px;padding:10px 12px;margin:8px 0 12px;display:grid;gap:8px}
+.linkbtn{background:none;border:0;padding:0;color:var(--priv);font-weight:650;cursor:pointer;font-size:13.5px}
+.frame{display:grid;gap:8px}
+@media (min-width:700px){.frame{grid-template-columns:auto 1fr auto 1fr auto 140px;align-items:center}}
+.frame span{font-weight:650}
+.lab3{display:grid;gap:8px;grid-template-columns:1.2fr 1fr 1fr .8fr;align-items:end}
+.lab3 .h{font-size:12px;color:var(--muted)}
+.rcheck{border:1px solid var(--line);border-radius:5px;padding:8px 10px;margin:0 0 8px}
+.rcheck .was{font-size:13px;color:var(--muted)}
+.checklist li button{margin-left:8px}
+.vsg{grid-template-columns:1fr 1fr}
+@media (min-width:640px){.vsg{grid-template-columns:1fr 1fr 1fr}}
+.weekpill{display:inline-block;font-size:12.5px;padding:2px 8px;border-radius:4px;background:var(--blue-wash);color:var(--blue-ink);font-weight:650}
+@media print{.abn{font-weight:700}.skp{color:#6B2C91;font-weight:700}}
+</style>
+
+</head>
+<body>
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><b>Clinical Charting Tool</b><span>VNSG 1260 Clinical I · San Jacinto College South</span></div>
+    <div class="band" id="band" aria-label="Patient summary"></div>
+    <div class="next num" id="next" role="status" aria-live="polite"></div>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+</header>
+<div class="storage-warn" id="storageWarn" role="alert">This browser is not saving your work. Keep this tab open and save your PDF before you close it.</div>
+<div class="wrap">
+  <aside class="rail" aria-label="Shift timeline"><h3>Shift timeline</h3><ol class="shift" id="rail"></ol></aside>
+  <main id="main"></main>
+</div>
+<footer class="f">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · Works offline. No login, no AI, no server. Your work stays in this browser on this device until you clear it.</footer>
+<div id="print" aria-hidden="true"></div>
+
+<script>
+"use strict";
+/* VNSG 1260 Clinical Charting Tool v2 — The AI Nurse Professor™ · Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026
+   Fixed rules only. No AI, no network, no server. */
+const VERSION='11.06.2026 v2';
+const KEY='vnsg1260_charting_v2';
+const ROUNDS=['0800','1000','1200','1400','1600'];
+const ROUND_CHECKS=['Repositioned (within precautions)','Toileting / incontinence care','Fluids per diet order','Call light + items in reach','Bed low + locked','Alarm on'];
+const TRIG_CHECKS=['New confusion / LOC change','Fall','Chest pain / new SOB','Uncontrolled pain','Choking / coughing with intake'];
+const DISP=['Bed','Chair','Ambulating','Bathroom','Therapy / off unit'];
+const BASE=['Same','Better','Worse'];
+const MANUAL_TRIG=['Fall','Chest pain','Uncontrolled pain','Other urgent concern'];
+const SAFETY=['Falls','Bed/chair alarm','Aspiration','Delirium','Pressure injury','Orthostatic hypotension','Bleeding (anticoagulant)','Hypoglycemia','Elopement','Other'];
+const GERI=['Beers Criteria','Renal dose check','Fall risk','Anticholinergic / sedating','Orthostatic','Bleeding'];
+const RIGHTS=['Patient (2 IDs)','Med','Dose','Route','Time','Reason','Documentation','Response','Right to refuse','Allergies re-checked'];
+const FEEL_S=['Calm','Nervous','Excited','Overwhelmed','Unsure','Confident','Tired','Other'];
+const FEEL_E=['Calm','Nervous','Proud','Overwhelmed','Unsure','Confident','Tired','Other'];
+const DX=['Hip or knee fracture / replacement','Stroke (CVA)','Cardiac','Pulmonary','Weakness after hospitalization','Spinal','Amputation','Wound','Other'];
+const HX=['Hypertension','Diabetes','Heart failure','COPD','Kidney disease','Atrial fibrillation','Dementia','Parkinson’s','Depression','Other'];
+const RECENT=['Fall','New symptom','New or changed order','Procedure','Family concern'];
+const TX=['PT','OT','SLP','Oxygen','Foley catheter','Wound care','IV / PICC','CPAP / BiPAP','Feeding tube'];
+const LABS=['K⁺','Na⁺','BUN','Creatinine','Hgb','WBC','INR','Glucose','Other'];
+const REACT=['Rash or hives','Swelling','Trouble breathing','Stomach upset','Unknown'];
+const PRECHECK=['Apical pulse','Blood pressure','Blood glucose','Potassium','INR','Respiratory rate + sedation level','Pain score','Swallow ability','None required'];
+
+/* ---------- Assessment systems (option wording checked against Timby Ch. 12, 13, 21, 28) ---------- */
+/* each option: [label, flag] flag 0 = expected, 1 = abnormal (needs description), 2 = information only */
+const SYS=[
+ {id:'neuro',t:'Neuro / Cognition',core:true,f:[
+  {k:'loc',l:'Level of consciousness',o:[['Alert',0],['Drowsy, wakes easily',1],['Hard to wake',1],['Does not respond',1]]},
+  {k:'orient',l:'Oriented to',s:'person, place, time, situation',o:[['All 4 (x4)',0],['3 of 4',1],['2 of 4',1],['1 of 4',1],['None',1],['Unable to assess',1]],tip:'Timby Ch. 13: for most clients, documenting “alert and oriented to person, place, time, and circumstances” is enough. Compare with the baseline cognition you chose on the Background tab.'},
+  {k:'speech',l:'Speech',o:[['Clear',0],['Slurred',1],['Trouble finding words',1],['Not speaking',1]]},
+  {k:'face',l:'Face',o:[['Even when smiling',0],['Droops on one side',1]]},
+  {k:'move',l:'Moves arms and legs',o:[['Equal on both sides',0],['Weaker on one side',1],['Weak all over',1]],tip:'American Heart Association / American Stroke Association F.A.S.T.: Face drooping, Arm weakness, Speech difficulty, Time. New one-sided face droop, weakness, or slurred speech is a stroke sign. Report it immediately, even if it goes away, and note the time it started.'}]},
+ {id:'cardio',t:'Cardio',core:false,f:[
+  {k:'rhythm',l:'Pulse rhythm',o:[['Regular',0],['Irregular',1]],tip:'Timby Ch. 12: adult pulse rate is about 60–100 beats per minute at rest. Count a full minute if irregular.'},
+  {k:'cap',l:'Capillary refill',o:[['Under 3 seconds',0],['3 seconds or more',1]],tip:'Timby Ch. 13: press the nail bed, release, and count “one-one thousand…”. Normal refill is less than 3 seconds.'},
+  {k:'edema',l:'Edema',o:[['None',0],['1+ (2 mm, slight)',1],['2+ (4 mm)',1],['3+ (6 mm, obvious swelling)',1],['4+ (8 mm, lasts minutes)',1]],tip:'Timby Ch. 13 and Box 13-2: press a thumb or finger into the tissue over a bone. If a pit remains, grade it: 1+ slight (2 mm) to 4+ deep (8 mm). Say where: feet, ankles, legs, hands.'},
+  {k:'temp',l:'Hands and feet',o:[['Warm',0],['Cool',1]]}]},
+ {id:'resp',t:'Respiratory',core:true,f:[
+  {k:'effort',l:'Breathing effort',o:[['Easy, unlabored',0],['Short of breath with activity',1],['Short of breath at rest',1],['Using extra muscles to breathe',1]],tip:'Timby Table 12-7: adult resting rate about 14–18 (male) and 16–20 (female).'},
+  {k:'lungs',l:'Lung sounds',o:[['Clear (soft rustling)',0],['Crackles (popping)',1],['Gurgles / rhonchi (bubbling, wet snoring)',1],['Wheezes (whistling)',1],['Diminished (quiet)',1]],tip:'Timby Ch. 13: crackles pop like crisped rice cereal in milk; gurgles are low and bubbling and may clear with a cough; wheezes whistle. If you hear an abnormal sound, also describe the cough and any sputum.'},
+  {k:'cough',l:'Cough',o:[['None',0],['Dry',1],['Wet / bringing up sputum',1]]}]},
+ {id:'gi',t:'GI / Nutrition / Swallow',core:true,f:[
+  {k:'diet',l:'Diet ordered',o:[['Regular',2],['Mechanical soft',2],['Pureed',2],['Full liquid',2],['Clear liquid',2],['NPO',2]]},
+  {k:'liquids',l:'Liquids ordered',o:[['Thin',2],['Nectar-thick',2],['Honey-thick',2],['Spoon-thick',2],['NPO',2]],tip:'Follow the diet order exactly. If the order says nectar-thick or honey-thick, every liquid you offer must be thickened to that level. Ask the primary nurse if you are not sure.'},
+  {k:'intake',l:'Meal eaten',o:[['76–100%',0],['51–75%',0],['26–50%',1],['0–25%',1],['Not observed',2]]},
+  {k:'swallow',l:'With eating or drinking',o:[['No coughing or choking',0],['Coughing or choking',1]],tip:'Timby: older adults with swallowing difficulty (dysphagia), often after a stroke or with dementia, are more likely to develop aspiration pneumonia. Coughing or choking with intake is on your notify-immediately list.'},
+  {k:'abd',l:'Abdomen',o:[['Soft',0],['Firm',1],['Swollen (distended)',1],['Tender',1]]},
+  {k:'bowel',l:'Bowel sounds',opt:true,o:[['Active',0],['Hypoactive (long silences)',1],['Hyperactive (frequent)',1],['Absent (none in 2–5 min)',1]],tip:'Timby Ch. 13: normal bowel sounds are clicks or gurgles, 5 to 34 per minute. Optional this term.'},
+  {k:'bm',l:'Last bowel movement',o:[['Today',0],['Yesterday',0],['2 days ago',0],['3 or more days',1],['Unknown',1]]}]},
+ {id:'gu',t:'GU',core:false,f:[
+  {k:'void',l:'Voiding',o:[['Continent',0],['Incontinent',1],['Indwelling catheter (Foley)',2],['External catheter',2],['Needs bedpan / urinal help',2]]},
+  {k:'urine',l:'Urine looks',o:[['Clear, light yellow',0],['Dark yellow',1],['Cloudy',1],['Pink or bloody',1],['Strong odor',1],['Not seen',2]]},
+  {k:'burn',l:'Burning or pain with voiding',o:[['No',0],['Yes',1]]}]},
+ {id:'skin',t:'Skin',core:true,f:[
+  {k:'color',l:'Color',o:[['Normal for this patient',0],['Pale (less red undertone)',1],['Flushed',1],['Bluish or gray',1],['Yellow',1]],tip:'Timby Ch. 6: commonly taught skin assessment is biased toward White clients. In dark skin, check color on the palms, soles, and abdomen in good light. Look for pallor or cyanosis in the conjunctiva and inside the mouth, and for jaundice in the sclera or hard palate (a yellow cast from fatty deposits can be normal).'},
+  {k:'feel',l:'Temperature and moisture',o:[['Warm and dry',0],['Cool',1],['Clammy (cool and moist)',1],['Hot',1]]},
+  {k:'pressure',l:'Pressure areas (heels, sacrum, hips)',o:[['Intact',0],['Red or darker, returns to normal color',1],['Red or darker, does NOT return to normal color',1],['Open area',1]],tip:'Timby Ch. 28: stage I is intact skin that is reddened or darkened and does not return to its normal color when pressure is relieved. Timby Ch. 6: redness and inflammation are harder to see on dark skin, so feel for warmth, firmness, or tenderness and ask about pain. Report any area that does not return to normal color this shift.'},
+  {k:'braden',l:'Braden score (from chart)',o:[['19–23 No risk',2],['15–18 Mild risk',2],['13–14 Moderate risk',2],['10–12 High risk',2],['9 or less Very high risk',2]]},
+  {k:'dress',l:'Dressing',o:[['No dressing',0],['Clean, dry, intact',0],['Drainage on dressing',1],['Loose or soiled',1]]}]},
+ {id:'mob',t:'Mobility / Function',core:true,f:[
+  {k:'assist',l:'Assist level',o:[['Independent',2],['Supervision',2],['Minimal assist',2],['Moderate assist',2],['Maximal assist',2],['Dependent',2]]},
+  {k:'device',l:'Device',o:[['None',2],['Walker',2],['Cane',2],['Wheelchair',2],['Mechanical lift',2]]},
+  {k:'wb',l:'Weight-bearing',o:[['No restriction',2],['Full (FWB)',2],['As tolerated (WBAT)',2],['Partial (PWB)',2],['Toe-touch (TTWB)',2],['Non-weight-bearing (NWB)',2]]},
+  {k:'prec',l:'Precautions',o:[['None',2],['Posterior hip',2],['Anterior hip',2],['Spinal',2],['Sternal',2]],tip:'Know the exact precautions before you reposition or move your patient. Ask the primary nurse or PT if you are not sure.'},
+  {k:'belt',l:'Gait belt used',o:[['Yes',0],['No',1],['Patient did not move',2]]}]},
+ {id:'pain',t:'Pain',core:true,f:[
+  {k:'scale',l:'Scale used',o:[['0–10',2],['PAINAD',2],['Faces',2]],tip:'Timby Ch. 20: older adults with cognitive impairment may not be able to report pain; changes in behavior, restlessness, agitation, or a faster pulse and breathing may be the main clues. Use the behavior-based scale your facility uses (such as PAINAD) when your patient cannot give a number.'},
+  {k:'score',l:'Score',tip:'A score of 4 or higher asks you to describe it. Ask your patient what pain level lets them rest and move. Their goal may differ from the number.',o:[['0',0],['1',0],['2',0],['3',0],['4',1],['5',1],['6',1],['7',1],['8',1],['9',1],['10',1]]},
+  {k:'effect',l:'Last pain medicine worked',o:[['Yes',0],['Partly',1],['No',1],['No dose given',2]]}]}
+];
+const PAIN_WORDS=['Aching','Sharp','Burning','Throbbing','Cramping','Other'];
+
+/* ---------- state ---------- */
+let storageOK=true;
+function blankRounds(){const r={};ROUNDS.forEach(t=>r[t]={status:'open',draft:{},saved:null,history:[]});return r;}
+function blank(){return {v:{},rounds:blankRounds(),log:[],skips:{},attest:{ok:false,name:''},view:'setup',notified:{},expand:{}};}
+let S=blank();
+function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);S=Object.assign(blank(),o);ROUNDS.forEach(t=>{if(!S.rounds[t])S.rounds[t]={status:'open',draft:{},saved:null,history:[]};});}}catch(e){storageOK=false;}
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){storageOK=false;}
+  if(!storageOK)document.getElementById('storageWarn').style.display='block';
+}
+let saveTimer=null;
+function save(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){if(storageOK){storageOK=false;document.getElementById('storageWarn').style.display='block';}}},250);}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function pad(n){return String(n).padStart(2,'0');}
+function nowHHMM(){const d=new Date();return pad(d.getHours())+pad(d.getMinutes());}
+function nowMin(){const d=new Date();return d.getHours()*60+d.getMinutes();}
+function toMin(h){if(!/^\d{4}$/.test(h||''))return null;const H=+h.slice(0,2),M=+h.slice(2);if(H>23||M>59)return null;return H*60+M;}
+function fmtDiff(m){m=Math.abs(m);return m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min';}
+function logIt(what){S.log.push({at:nowHHMM(),what});save();}
+function len(s){return (s||'').trim().length;}
+const V=()=>S.v;
+function week(){return +(V()['meta.week']||0);}
+function minText(){return week()>=3?40:15;}
+function medsRequired(){return week()>=4;}
+function sysRequired(s){return s.core||week()>=3;}
+
+/* ---------- charting prompts (fixed rules) ---------- */
+const PRIV=[
+ [/\b(rm|room|bed)\s*#?\s*\d{1,4}[a-z]?\b/i,'This looks like a room or bed number. Remove it — no patient identifiers.'],
+ [/\b(Mr|Mrs|Ms|Miss|Dr|mr|mrs|ms|dr|MR|MRS|DR)\.?\s+[A-Z][a-z]+/,'This looks like a name. Use “my patient” or “the primary nurse” instead.'],
+ [/\b\d{6,}\b/,'A long number looks like an MRN or account number. Remove it.'],
+ [/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/,'This looks like a date. Do not record dates.'],
+ [/\b(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|jun(e)?|jul(y)?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?\s+\d{1,2}(st|nd|rd|th)?\b/i,'This looks like a date. Do not record dates.'],
+ [/\bpatient\s+(?!States|Said|Reports|Is|Was|Has)[A-Z][a-z]{2,}\b|\b(?!Patient|She|They|Wife|Husband|Daughter|Son|Family|Nurse|Doctor|Therapist|Instructor|Then|Now|Also|Later)[A-Z][a-z]{2,}\s+(said|states|stated|reports)\b/,'This may be a name. Use “patient states” instead.']
+];
+const ABBR=[
+ [/\d\s?U\b|\bU\b(?=\s|$|[.,;])/,'“U” is on The Joint Commission do-not-use list. Write “unit.”'],
+ [/\bIU\b/,'“IU” is on the do-not-use list. Write “international unit.”'],
+ [/\bq\.?\s?o\.?\s?d\.?(?![a-z])/i,'“QOD” is on the do-not-use list. Write “every other day.”'],
+ [/\bq\.?\s?d\.?(?![a-z])/i,'“QD” is on the do-not-use list. Write “daily.”'],
+ [/\b(MS|MSO4|MgSO4)\b/,'“MS / MSO4 / MgSO4” is on the do-not-use list. Write the full drug name.'],
+ [/\b\d+\.0\s?(mg|mcg|mL|ml|g|units?|tabs?)\b/i,'Trailing zero (e.g., 1.0 mg) is on the do-not-use list. Write “1 mg.”'],
+ [/(^|[^\d])\.\d+\s?(mg|mcg|mL|ml|g)\b/i,'Missing leading zero (e.g., .5 mg). Write “0.5 mg.”']
+];
+const INTERP=/\b(seems?|seemed|appears?|appeared|apparently|fine|good|normal|ok|okay|tolerated (it )?well|doing well|anxious|upset|happy|nice|pleasant|comfortable)\b/i;
+function lint(text,kind){
+  const out=[];const t=text||'';if(!t.trim())return out;
+  PRIV.forEach(([re,m])=>{if(re.test(t))out.push(['privacy',m]);});
+  ABBR.forEach(([re,m])=>{if(re.test(t))out.push(['abbr',m]);});
+  if(kind==='data'||kind==='D'||kind==='R'){const m=t.match(INTERP);if(m)out.push(['interp','“'+m[0]+'” is an interpretation. Describe what you saw, heard, or measured that made you think this.']);}
+  if(kind==='D'&&!/["“”]/.test(t))out.push(['quote','Did your patient say anything you can quote? Use their exact words in quotation marks.']);
+  return out;
+}
+function lintBox(text,kind){const b=el('div','lint');lint(text,kind).forEach(([c,m])=>b.appendChild(el('div',c,esc(m))));return b;}
+function privHits(text){return PRIV.some(([re])=>re.test(text||''));}
+
+/* ---------- vital signs ---------- */
+function num(s){const m=String(s||'').match(/-?\d+(\.\d+)?/);return m?parseFloat(m[0]):null;}
+function vsTriggers(o){
+  const t=[];const bp=String(o.bp||'').match(/(\d{2,3})\s*\/\s*(\d{2,3})/);
+  if(bp){const sbp=+bp[1];if(sbp<90)t.push('SBP '+sbp+' (< 90)');if(sbp>180)t.push('SBP '+sbp+' (> 180)');}
+  const hr=num(o.hr);if(hr!=null){if(hr<50)t.push('HR '+hr+' (< 50)');if(hr>120)t.push('HR '+hr+' (> 120)');}
+  const sp=num(o.spo2);if(sp!=null&&sp<90)t.push('SpO₂ '+sp+'% (< 90%)');
+  const bg=num(o.bg);if(bg!=null){if(bg<70)t.push('BG '+bg+' (< 70)');if(bg>300)t.push('BG '+bg+' (> 300)');}
+  return t;
+}
+function aVS(){const v=V();return {bp:v['A.bp'],hr:v['A.hr'],spo2:v['A.spo2'],bg:v['A.bg']};}
+
+/* ---------- assessment logic ---------- */
+function fk(s,f){return 'A.'+s.id+'.'+f.k;}
+function optFlag(f,val){const o=f.o.find(x=>x[0]===val);return o?o[1]:null;}
+function isAbn(s,f){return optFlag(f,V()[fk(s,f)])===1;}
+function abnList(){const L=[];SYS.forEach(s=>{if(S.skips['A.'+s.id])return;s.f.forEach(f=>{if(isAbn(s,f))L.push({s,f,val:V()[fk(s,f)],isNew:V()[fk(s,f)+'.new']==='New today'||autoNew(s,f),d:V()[fk(s,f)+'.d']||''});});});return L;}
+function autoNew(s,f){return s.id==='neuro'&&f.k==='orient'&&V()['B.cog']==='Intact'&&isAbn(s,f)&&V()[fk(s,f)]!=='Unable to assess';}
+function immediateTriggers(){
+  const v=V();const t=vsTriggers(aVS());
+  const nv=(id,k)=>v['A.'+id+'.'+k];const isNew=(id,k)=>nv(id,k+'.new')==='New today';
+  const neuro=SYS[0];
+  if(autoNew(neuro,neuro.f[1]))t.push('New confusion (baseline cognition intact)');
+  else if(isAbn(neuro,neuro.f[1])&&isNew('neuro','orient'))t.push('New confusion');
+  if(isAbn(neuro,neuro.f[0])&&isNew('neuro','loc'))t.push('Change in level of consciousness');
+  if(['Slurred','Trouble finding words'].includes(nv('neuro','speech'))&&isNew('neuro','speech'))t.push('New speech change (stroke sign)');
+  if(nv('neuro','move')==='Weaker on one side'&&isNew('neuro','move'))t.push('New one-sided weakness (stroke sign)');
+  if(nv('neuro','face')==='Droops on one side'&&isNew('neuro','face'))t.push('New facial droop (stroke sign)');
+  if(['Short of breath at rest','Using extra muscles to breathe'].includes(nv('resp','effort')))t.push('Shortness of breath at rest');
+  if(nv('gi','swallow')==='Coughing or choking')t.push('Coughing / choking with intake');
+  if(nv('skin','color')==='Bluish or gray')t.push('Bluish or gray skin color');
+  if(v['S.cond']==='Unstable')t.push('You rated the patient unstable');
+  (v['R.manual']||[]).forEach(x=>t.push(x));
+  return Array.from(new Set(t));
+}
+
+/* ---------- skip with instructor permission ---------- */
+function skipped(id){return !!S.skips[id];}
+function skipControl(id,label,onChange){
+  const w=el('div');
+  if(S.skips[id]){
+    const s=S.skips[id];
+    w.appendChild(el('div','skipb','<b>Skipped with instructor permission.</b> Approved by '+esc(s.initials)+' at '+esc(s.at)+'. Reason: '+esc(s.reason)+' '));
+    const u=el('button','linkbtn','Undo skip and complete this');u.type='button';u.onclick=()=>{logIt(label+' skip undone');delete S.skips[id];save();onChange();};
+    w.firstChild.appendChild(u);return w;
+  }
+  const b=el('button','linkbtn','Skip with instructor permission');b.type='button';
+  const f=el('div','skipform');f.hidden=true;
+  const r=el('textarea');r.rows=2;r.placeholder='Reason your instructor approved (e.g., patient at dialysis during assessment; not assigned this week)';
+  const i=el('input');i.type='text';i.maxLength=4;i.placeholder='Instructor initials';i.style.maxWidth='170px';
+  const ok=el('button','btn sm','Record skip');ok.type='button';const msg=el('div','errs');
+  ok.onclick=()=>{msg.textContent='';if(len(r.value)<8){msg.textContent='Write the reason (at least a short phrase).';return;}if(len(i.value)<2){msg.textContent='Your instructor must enter their initials.';return;}
+    S.skips[id]={reason:r.value.trim(),initials:i.value.trim().toUpperCase(),at:nowHHMM(),label};logIt(label+' skipped — approved by '+i.value.trim().toUpperCase()+': '+r.value.trim());save();onChange();};
+  f.append(el('div','lab','Ask your instructor first. They enter their initials here.'),r,i,ok,msg);
+  b.onclick=()=>{f.hidden=false;b.hidden=true;r.focus();};
+  w.append(b,f);return w;
+}
+
+/* ---------- generic fields ---------- */
+function setV(k,val){S.v[k]=val;save();refreshLive();}
+function fieldEl(f){
+  if(f.t==='grid'){const g=el('div','grid g'+(f.cols||2));f.f.forEach(x=>{const e=fieldEl(x);if(e)g.appendChild(e);});const w=el('div','field');w.appendChild(g);return w;}
+  if(f.t==='card'){const c=el('div','card');c.appendChild(el('h3',null,esc(f.title)));f.f.forEach(x=>{const e=fieldEl(x);if(e)c.appendChild(e);});return c;}
+  if(f.t==='note'){return el('div','info',f.html);}
+  if(f.t==='custom'){return f.render();}
+  const w=el('div','field');w.dataset.k=f.k;if(f.show){SHOWS[f.k]=f.show;if(!f.show(V()))w.hidden=true;}
+  const id='f_'+f.k.replace(/\W/g,'_');
+  const grp=f.t==='radio'||f.t==='checks';
+  const lab=el(grp?'div':'label',grp?'lab':null,esc(f.l)+(f.h?'<span class="h">'+esc(f.h)+'</span>':''));if(!grp)lab.htmlFor=id;
+  w.appendChild(lab);const val=V()[f.k];
+  if(f.t==='text'||f.t==='area'){
+    const i=f.t==='text'?el('input'):el('textarea');if(f.t==='text')i.type='text';if(f.rows)i.rows=f.rows;i.id=id;i.value=val||'';i.autocomplete='off';if(f.ph)i.placeholder=f.ph;
+    w.appendChild(i);let lb=f.nolint?null:lintBox(val,f.lint);if(lb)w.appendChild(lb);
+    i.addEventListener('input',()=>{setV(f.k,i.value);if(!f.nolint){const nb=lintBox(i.value,f.lint);w.replaceChild(nb,lb);lb=nb;}});
+  }else if(f.t==='select'){
+    const s=selectEl(f.o.map(o=>Array.isArray(o)?o[0]:o),val,v=>{setV(f.k,v);refreshShows();if(f.after)f.after();});s.id=id;w.appendChild(s);
+  }else if(f.t==='time'){w.appendChild(timeIn(f.k,id));}
+  else if(grp){
+    const c=el('div','chips');c.setAttribute('role',f.t==='radio'?'radiogroup':'group');c.setAttribute('aria-label',f.l);
+    f.o.forEach(o=>{
+      const b=el('button','chip'+(f.trig?' trig':''),esc(o));b.type='button';
+      const on=f.t==='radio'?val===o:Array.isArray(val)&&val.includes(o);b.setAttribute('aria-pressed',on?'true':'false');
+      b.addEventListener('click',()=>{
+        if(f.t==='radio'){const nv=V()[f.k]===o?'':o;setV(f.k,nv);c.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.textContent===nv?'true':'false'));}
+        else{let a=Array.isArray(V()[f.k])?V()[f.k].slice():[];if(f.none&&o===f.none)a=a.includes(o)?[]:[o];else{a=a.filter(x=>x!==f.none);a=a.includes(o)?a.filter(x=>x!==o):a.concat(o);}setV(f.k,a);c.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',a.includes(x.textContent)?'true':'false'));}
+        refreshShows();if(f.after)f.after();
+      });c.appendChild(b);});
+    w.appendChild(c);
+  }
+  return w;
+}
+function selectEl(opts,val,cb){
+  const s=el('select');s.appendChild(new Option('Choose…',''));opts.forEach(o=>s.appendChild(new Option(o,o)));s.value=val||'';
+  s.addEventListener('change',()=>cb(s.value));return s;
+}
+function timeIn(k,id,onSet){
+  const w=el('div');const row=el('div','timein');const i=el('input');i.type='text';i.inputMode='numeric';i.maxLength=4;i.placeholder='HHMM';if(id)i.id=id;i.value=V()[k]||'';
+  const b=el('button','btn sm','Now');b.type='button';const msg=el('div','lint');
+  const chk=()=>{msg.innerHTML='';if(i.value&&toMin(i.value)==null)msg.appendChild(el('div','abbr','Use military time, four digits (e.g., 1030).'));};
+  i.addEventListener('input',()=>{i.value=i.value.replace(/\D/g,'');setV(k,i.value);chk();if(onSet)onSet();});
+  b.addEventListener('click',()=>{i.value=nowHHMM();setV(k,i.value);chk();if(onSet)onSet();});
+  row.append(i,b);w.append(row,msg);chk();return w;
+}
+function allFields(){const out=[];const walk=l=>l.forEach(f=>{if(f.f)walk(f.f);else if(f.k)out.push(f);});SECTIONS.forEach(s=>s.fields&&walk(s.fields));return out;}
+const SHOWS={};
+function refreshShows(){Object.keys(SHOWS).forEach(k=>{const w=document.querySelector('.field[data-k="'+CSS.escape(k)+'"]');if(w)w.hidden=!SHOWS[k](V());});}
+function renderFields(list,host){list.forEach(f=>{const e=fieldEl(f);if(e)host.appendChild(e);});}
+function fld(label,hint,node){const w=el('div','field');w.appendChild(el('div','lab',esc(label)+(hint?'<span class="h">'+esc(hint)+'</span>':'')));w.appendChild(node);return w;}
+function chip(label,on,cb,trig){const b=el('button','chip'+(trig?' trig':''),esc(label));b.type='button';b.setAttribute('aria-pressed',on?'true':'false');b.addEventListener('click',cb);return b;}
+function chipGroup(opts,get,set,multi,trig){
+  const c=el('div','chips');
+  opts.forEach(o=>{const b=chip(o,multi?(get()||[]).includes(o):get()===o,()=>{
+    if(multi){let a=(get()||[]).slice();a=a.includes(o)?a.filter(x=>x!==o):a.concat(o);set(a);b.setAttribute('aria-pressed',a.includes(o)?'true':'false');}
+    else{const nv=get()===o?'':o;set(nv);c.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.textContent===nv?'true':'false'));}
+  },trig);c.appendChild(b);});return c;
+}
+
+/* ---------- custom pieces ---------- */
+function allergyBlock(){
+  const w=el('div','field');w.appendChild(el('div','lab','Allergies + reaction<span class="h">the reaction tells an allergy apart from an intolerance</span>'));
+  const draw=()=>{w.querySelectorAll('.al').forEach(x=>x.remove());const v=V();
+    const box=el('div','al');
+    box.appendChild(chipGroup(['No known drug allergies (NKDA)'],()=>v['S.nkda']?'No known drug allergies (NKDA)':'',x=>{setV('S.nkda',!!x);draw();},false));
+    if(!v['S.nkda']){
+      [1,2,3].forEach(n=>{const g=el('div','grid g2');g.style.marginTop='8px';
+        const i=el('input');i.type='text';i.placeholder='Allergy '+n+' (drug, food, latex)';i.value=v['S.al'+n]||'';i.addEventListener('input',()=>setV('S.al'+n,i.value));
+        g.append(i,selectEl(REACT,v['S.alr'+n],x=>setV('S.alr'+n,x)));box.appendChild(g);});
+    }
+    w.appendChild(box);};
+  draw();return w;
+}
+function labsBlock(){
+  const w=el('div','field');w.appendChild(el('div','lab','Important results<span class="h">up to 3 from the chart: value, high/low/normal flag, and trend</span>'));
+  [1,2,3].forEach(n=>{const k='B.lab'+n;const r=el('div','lab3');r.style.marginBottom='8px';
+    const v=el('input');v.type='text';v.placeholder='Value';v.value=V()[k+'v']||'';v.addEventListener('input',()=>setV(k+'v',v.value));
+    r.append(selectEl(LABS,V()[k],x=>setV(k,x)),v,selectEl(['High','Low','Normal'],V()[k+'f'],x=>setV(k+'f',x)),selectEl(['↑ rising','↓ falling','→ steady','First value'],V()[k+'t'],x=>setV(k+'t',x)));w.appendChild(r);});
+  return w;
+}
+function requestFrame(){
+  const w=el('div','field');w.appendChild(el('div','lab','My specific request<span class="h">fill in the three blanks</span>'));
+  const fr=el('div','frame');const mk=(k,ph)=>{const i=el('input');i.type='text';i.placeholder=ph;i.value=V()[k]||'';i.addEventListener('input',()=>setV(k,i.value));return i;};
+  fr.append(el('span',null,'I am requesting'),mk('R.what','what (e.g., a recheck of BP)'),el('span',null,'for'),mk('R.for','which finding'),el('span',null,'by'),mk('R.by','when (e.g., 1000)'));
+  w.appendChild(fr);return w;
+}
+function becauseBlock(){
+  const w=el('div','field');w.appendChild(el('div','lab','Because<span class="h">pick the cue from S, B, or A, then explain the connection</span>'));
+  const cues=abnList().map(a=>a.s.t+': '+a.val).concat(immediateTriggers()).concat(V()['S.cond']&&V()['S.cond']!=='Stable'?['Condition rated '+V()['S.cond'].toLowerCase()]:[]);
+  const uniq=Array.from(new Set(cues));
+  if(uniq.length)w.appendChild(chipGroup(uniq,()=>V()['R.cues'],x=>setV('R.cues',x),true));
+  else w.appendChild(el('div','info','Cues you mark abnormal on the Assessment tab will appear here to choose from.'));
+  const t=el('textarea');t.rows=2;t.placeholder='This finding matters because …';t.value=V()['R.because']||'';const lb=lintBox(t.value);
+  t.addEventListener('input',()=>setV('R.because',t.value));t.style.marginTop='8px';w.append(t,lb);return w;
+}
+function detectedBlock(){
+  const w=el('div');w.dataset.live='rdetect';return w;
+}
+function drawDetected(){document.querySelectorAll('[data-live="rdetect"]').forEach(drawDetectedIn);}
+function drawDetectedIn(w){
+  const tr=immediateTriggers();const sig=tr.join('|');if(w.dataset.sig===sig&&w.childNodes.length)return;w.dataset.sig=sig;w.innerHTML='';
+  if(!tr.length){w.appendChild(el('div','okbox','No notify-immediately triggers found in your entries. If something urgent happens, check it below.'));return;}
+  const a=el('div','alert','<b>Notify your instructor AND the primary nurse immediately:</b>'+esc(tr.join(' · '))+'. Unless facility or order parameters differ. Record both times here. This cannot be skipped.');w.appendChild(a);
+  const g=el('div','grid g2');[['R.instT','Instructor told at'],['R.rnT','Primary nurse told at']].forEach(([k,l])=>g.appendChild(fld(l,null,timeIn(k))));w.appendChild(g);
+}
+
+/* ---------- sections ---------- */
+function medFields(n){const p='M'+n+'.';return [
+ {t:'grid',cols:3,f:[
+  {k:p+'name',l:'Generic / brand',t:'text',nolint:true},
+  {k:p+'class',l:'Class',h:'pharmacologic / therapeutic',t:'text'},
+  {k:p+'dose',l:'Dose · route · time',t:'text'}]},
+ {k:p+'sched',l:'Scheduled or PRN',t:'radio',o:['Scheduled','PRN']},
+ {k:p+'what',l:'What it does and why this patient needs it',h:'one or two sentences — link it to a diagnosis',t:'area',rows:2,ph:'It works by … My patient takes it for …'},
+ {t:'grid',cols:2,f:[
+  {k:p+'range',l:'Safe dose range',h:'from your drug reference',t:'text'},
+  {k:p+'inrange',l:'Ordered dose in safe range?',t:'radio',o:['Yes','No → hold + notify']}]},
+ {t:'grid',cols:2,f:[
+  {k:p+'pre',l:'Check before giving',t:'select',o:PRECHECK},
+  {k:p+'actual',l:'Patient’s actual value + time',t:'text',ph:'e.g., apical 72 at 0745',show:v=>v[p+'pre']&&v[p+'pre']!=='None required'}]},
+ {k:p+'decision',l:'My decision',h:'you decide; your instructor confirms before anything is given',t:'radio',o:['Give','Hold + notify instructor']},
+ {t:'grid',cols:2,f:[
+  {k:p+'adverse',l:'Priority adverse effects',t:'area',rows:2},
+  {k:p+'inter',l:'Interactions',h:'other meds / labs',t:'area',rows:2}]},
+ {k:p+'eval',l:'Evaluate response',h:'what you will check',t:'area',rows:2},
+ {k:p+'evalTime',l:'Reassess response at',h:'military time · adds a reminder to your shift timeline',t:'time'},
+ {t:'grid',cols:2,f:[
+  {k:p+'calc',l:'Dose calculation',h:'show work',t:'area',rows:2},
+  {k:p+'teach',l:'Patient teaching',h:'one plain-language sentence',t:'area',rows:2,ph:'This medicine helps your …'}]},
+ {k:p+'geri',l:'Geriatric considerations',t:'checks',o:GERI},
+ {k:p+'form',l:'Form',t:'radio',o:['Whole','May crush','DO NOT crush (ER/EC/SL)','Needs alternate form']},
+ {k:p+'rights',l:'Rights checked',t:'checks',o:RIGHTS}
+];}
+
+const SECTIONS=[
+ {id:'setup',L:'▸',short:'Start',title:'Start of shift',sub:'Your name and week set your PDF file name and what is required. No patient identifiers anywhere: age range and sex only.',fields:[
+  {t:'grid',cols:3,f:[
+   {k:'meta.student',l:'Your name',h:'as you sign: First Last',t:'text',nolint:true},
+   {k:'meta.section',l:'Section',t:'radio',o:['304','306']},
+   {k:'meta.week',l:'Clinical week #',t:'radio',o:['1','2','3','4','5','6','7'],after:()=>rerender()}]},
+  {k:'meta.age',l:'Patient age range',t:'radio',o:['60–69','70–79','80–89','90+']},
+  {k:'meta.sex',l:'Patient sex',t:'radio',o:['M','F']},
+  {t:'custom',render:()=>{const d=el('div','info');d.dataset.live='weekrules';return d;}},
+  {t:'note',html:'<b>Sequence.</b> S, B, A from bedside report → Clinical Reasoning Moment → chart/MAR review + Medication Prep → write R → report to your instructor in S-B-A-R order → round every 2 hours and chart DAR → end-of-shift handoff → Reflection Journal → save your PDF and upload it to Blackboard.'},
+  {t:'note',html:'<b>Skipping an area.</b> Any area except this tab can be skipped only with your instructor’s permission. Your instructor enters their initials and the reason, and it prints on your PDF.'}
+ ]},
+ {id:'S',L:'S',short:'Situation',title:'Situation',skip:'S',sub:'Who the patient is (age range and sex only), current condition, and the immediate concern.',fields:[
+  {k:'S.code',l:'Code status',t:'radio',o:['Full','DNR','Other']},
+  {k:'S.codeOther',l:'If other, describe',t:'text',show:v=>v['S.code']==='Other'},
+  {k:'S.mpoa',l:'Advance directive / MPOA',t:'radio',o:['Y','N']},
+  {k:'S.iso',l:'Isolation',t:'checks',o:['Standard','Contact','C. diff / Enteric','Droplet','Airborne']},
+  {t:'custom',render:allergyBlock},
+  {k:'S.cond',l:'Current condition',h:'How does the patient look right now?',t:'radio',o:['Stable','Needs watching','Unstable']},
+  {k:'S.condWhy',l:'What tells you that?',t:'area',rows:2,lint:'data',ph:'I can tell because …'},
+  {k:'S.concern',l:'Immediate concern',h:'The one thing your instructor must hear first.',t:'area',rows:2,ph:'The most important thing right now is …'}
+ ]},
+ {id:'B',L:'B',short:'Background',title:'Background',skip:'B',sub:'Diagnosis, relevant history, baseline status, recent events, treatments, and important results.',fields:[
+  {t:'grid',cols:2,f:[
+   {k:'B.dxCat',l:'Reason for rehab',t:'select',o:DX},
+   {k:'B.dx',l:'Exact diagnosis',h:'as written in the chart',t:'text'}]},
+  {k:'B.hx',l:'Relevant history',h:'tap all that apply',t:'checks',o:HX.concat(['None']),none:'None'},
+  {k:'B.hxImpact',l:'How this history changes today’s care',t:'text',ph:'Because of …, I will …',show:v=>(v['B.hx']||[]).some(x=>x!=='None')},
+  {t:'card',title:'Baseline status — before this illness, your comparison point',f:[
+   {k:'B.cog',l:'Cognition',t:'radio',o:['Intact','Mild impairment','Dementia','Unknown']},
+   {k:'B.func',l:'Function',t:'radio',o:['Independent','Needed assist','Dependent']},
+   {k:'B.lived',l:'Lived',t:'radio',o:['Alone','With family','ALF / LTC']},
+   {k:'B.aids',l:'Aids',t:'checks',o:['Glasses','Hearing aids','Dentures','Interpreter needed']}]},
+  {k:'B.recent',l:'Recent events (last 24 h)',t:'checks',o:RECENT.concat(['None reported']),none:'None reported'},
+  {k:'B.recentD',l:'Describe',t:'text',show:v=>(v['B.recent']||[]).some(x=>x!=='None reported')},
+  {k:'B.tx',l:'Treatments & therapy today',t:'checks',o:TX.concat(['None']),none:'None'},
+  {t:'custom',render:labsBlock}
+ ]},
+ {id:'A',L:'A',short:'Assessment',title:'Assessment',sub:'Choose what you observed. Nothing is pre-filled. Any abnormal choice asks you to describe it and say whether it is new.',custom:'assess'},
+ {id:'CR',L:'★',short:'Reasoning',title:'Clinical Reasoning Moment',skip:'CR',sub:'CJMM: Recognize Cues → Analyze Cues. From verbal report only — before you open the chart.',fields:[
+  {k:'CR.q1',l:'Q1  Recognize Cues',h:'What concerns you most and why? Name the specific finding or statement.',t:'area',ph:'I am most concerned about … because …'},
+  {k:'CR.q2a',l:'Q2  Verify in the chart #1',h:'and why it cannot wait',t:'area',rows:2,ph:'I need to check … because …'},
+  {k:'CR.q2b',l:'Q2  Verify in the chart #2',t:'area',rows:2,ph:'I also need to check … because …'},
+  {k:'CR.sick',l:'Q3  How sick is this patient right now?',t:'radio',o:['Stable','Needs watching','Getting worse']},
+  {k:'CR.q3',l:'Q3  Analyze Cues — what from report supports that?',h:'This is your first clinical hypothesis.',t:'area',ph:'I think … because report said …'},
+  {k:'CR.priority',l:'Q3  If there is more than one problem, which is most urgent and why?',h:'Prioritize hypotheses. Optional Weeks 1–2, required from Week 3.',t:'area',rows:2,ph:'The most urgent problem is … because …'}
+ ]},
+ {id:'Rx',L:'Rx',short:'Meds',title:'Medication Prep',skip:'Rx',sub:'Complete from the MAR and a current drug reference before the 0800–1000 med pass. Your instructor reviews this with you before any medication is given.',fields:[
+  {t:'custom',render:()=>el('div','info',medsRequired()?'<b>Week '+week()+': Medication 1 is required.</b> Medication 2 is optional (maximum 2).':'<b>Medication Prep is optional until Week 4.</b> Practicing now with one medication will make Week 4 easier.')},
+  {t:'card',title:'Medication 1',f:medFields(1)},
+  {t:'card',title:'Medication 2 (optional)',f:medFields(2)}
+ ]},
+ {id:'R',L:'R',short:'Recommendation',title:'Recommendation',skip:'R',sub:'You request — your instructor and the primary nurse act.',fields:[
+  {t:'custom',render:detectedBlock},
+  {k:'R.manual',l:'Anything else urgent right now?',h:'check only if it is happening',t:'checks',o:MANUAL_TRIG,trig:true,after:()=>drawDetected()},
+  {k:'R.type',l:'I am requesting',t:'checks',o:['Action','Clarification','Assessment','Order (instructor relays to primary nurse)','Support / supervision']},
+  {t:'custom',render:requestFrame},
+  {t:'custom',render:becauseBlock},
+  {k:'R.follow',l:'Follow-up',h:'what I will look for when I reassess',t:'area',rows:2},
+  {k:'R.followTime',l:'Reassess at',h:'adds a reminder; chart it as a round and mark it “Linked: my R follow-up”',t:'time'},
+  {k:'R.loop',l:'Closed loop',t:'checks',o:['Instructor read back my request','Plan confirmed','Primary nurse informed']}
+ ]},
+ {id:'N',L:'N',short:'Rounds',title:'Nurse’s Notes · Rounding Log',sub:'Round on your patient every 2 hours. Chart each round in DAR format (Timby Ch. 9, focus charting) as soon as you leave the room. Student learning record — not part of the medical record.',custom:'rounds'},
+ {id:'E',L:'✓',short:'End of shift',title:'End of Shift · Disposition + Handoff',skip:'E',sub:'1730–1800. Compare how your patient is now with how they were this morning.',custom:'end'},
+ {id:'J',L:'J',short:'Reflection',title:'Reflection Journal',skip:'J',sub:'Gibbs Reflective Cycle. Write in first person, like a journal. There are no wrong feelings. You are graded on honesty and thinking, not on how the day went. Say “my patient” — no name, initials, room, or date.',fields:[
+  {k:'J.what',l:'1  What happened today',h:'What did I do, step by step? What care did I give, what did I see, who did I work with?',t:'area',rows:5,ph:'I started my shift by …'},
+  {k:'J.feelS',l:'2  How I felt — start of shift',t:'checks',o:FEEL_S},
+  {k:'J.feelE',l:'2  How I felt — end of shift',t:'checks',o:FEEL_E},
+  {k:'J.feelWhy',l:'What changed my feelings during the day?',h:'Was there a moment I felt most like a nurse, or least like one?',t:'area',rows:3,ph:'I felt most like a nurse when …'},
+  {t:'grid',cols:2,f:[
+   {k:'J.well',l:'3  What went well',h:'One thing I did well and how I know.',t:'area',rows:3,ph:'I did well at … I know because …'},
+   {k:'J.hard',l:'3  What was hard',h:'One moment that was difficult, confusing, or uncomfortable.',t:'area',rows:3,ph:'It was hard when …'}]},
+  {k:'J.why',l:'4  Why it went that way',h:'What helped me? What got in the way? What would a more experienced nurse have done differently?',t:'area',rows:3},
+  {k:'J.learned',l:'5  What I learned',h:'About nursing, my patient’s needs, or myself. Name one thing from Timby or class I used today.',t:'area',rows:3,ph:'Today I learned … I used … from Timby/class when …'},
+  {k:'J.plan',l:'6  My plan for next clinical day',h:'One specific goal, how I will practice it, and what support I need from my instructor.',t:'area',rows:3,ph:'Next time I will … I will practice by … I need my instructor to …'},
+  {t:'note',html:'<b>If something from today is still on your mind,</b> tell your instructor before you leave. Hard days are part of learning to be a nurse, and you do not have to carry them alone.'}
+ ]},
+ {id:'X',L:'PDF',short:'Save PDF',title:'Check, attest, and save your PDF',sub:'Everything required must be complete or skipped with instructor permission. Then upload the PDF to Blackboard and clear this device.',custom:'export'}
+];
+
+/* ---------- assessment tab ---------- */
+function renderAssess(host){
+  host.appendChild(el('div','info','<b>How to use this tab.</b> Pick what you actually saw, heard, or measured. Tap <b>What is normal?</b> if you are unsure. '+(week()>=3?'All systems are required this week.':'Weeks 1–2: Neuro, Respiratory, GI/Swallow, Skin, Mobility, and Pain are required. Cardio and GU are optional practice.')));
+  const al=el('div');al.dataset.live='rdetect';host.appendChild(al);
+  host.appendChild(vsCard());
+  SYS.forEach(s=>host.appendChild(sysCard(s)));
+  const ch=el('div','card');ch.appendChild(el('h3',null,'Change from baseline'));
+  const pl=el('div');pl.dataset.live='newlist';ch.appendChild(pl);
+  const t=el('textarea');t.rows=3;t.value=V()['A.change']||'';t.placeholder='Compared with baseline, my patient is now … The most important difference is …';let lb=lintBox(t.value,'data');
+  t.addEventListener('input',()=>{setV('A.change',t.value);const x=lintBox(t.value,'data');ch.replaceChild(x,lb);lb=x;});
+  ch.append(el('div','h','What is different compared with this patient’s baseline? This is your most important finding. Write it in your own words.'),t,lb);host.appendChild(ch);
+  renderFields([{k:'A.safety',l:'Safety risks',t:'checks',o:SAFETY}],host);
+}
+function vsCard(){
+  const c=el('div','sys');c.id='sys_vs';const h=el('div','sh');h.appendChild(el('h3',null,'Vital signs'));h.appendChild(el('span','req'+(vsDone()?' done':''),vsDone()?'Complete':'Required'));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.vs','Vital signs',()=>replaceCard(c,vsCard)));
+  if(skipped('A.vs'))return c;
+  const g=el('div','grid g3 vsg');
+  const inp=(k,l,h,ph)=>{const i=el('input');i.type='text';i.value=V()[k]||'';if(ph)i.placeholder=ph;i.addEventListener('input',()=>{setV(k,i.value);upd();});return fld(l,h,i);};
+  g.append(inp('A.bp','BP',null,'132/78'),inp('A.hr','HR','beats per minute','72'),inp('A.rr','RR','breaths per minute','18'),inp('A.spo2','SpO₂','%','95'));
+  g.appendChild(fld('Oxygen',null,selectEl(['Room air','Nasal cannula','Other device'],V()['A.o2'],x=>{setV('A.o2',x);replaceCard(c,vsCard);})));
+  if(V()['A.o2']==='Nasal cannula'||V()['A.o2']==='Other device')g.appendChild(inp('A.o2L','Liters per minute',null,'2'));
+  g.append(inp('A.temp','Temp','°F','98.4'),fld('Temp route',null,selectEl(['Oral','Temporal','Axillary','Tympanic'],V()['A.troute'],x=>setV('A.troute',x))),inp('A.bg','BG','if ordered','')); 
+  b.appendChild(g);
+  b.appendChild(fld('Compared with the last set in the chart',null,selectEl(['About the same','One or more values higher','One or more values lower','No earlier set to compare'],V()['A.trend'],x=>{setV('A.trend',x);replaceCard(c,vsCard);})));
+  if(/higher|lower/.test(V()['A.trend']||''))b.appendChild(inp('A.trendWhich','Which value changed, and from what?',null,'e.g., HR 78 → 104'));
+  b.appendChild(el('details','tip','<summary>What is normal?</summary><p>Timby Ch. 12: adult pulse about 60–100 at rest; resting respirations about 14–18 (male) and 16–20 (female). Timby Ch. 21: normal SpO₂ is 95–100%; a sustained level below 90% needs action. Your notify parameters: SBP &lt; 90 or &gt; 180, HR &lt; 50 or &gt; 120, SpO₂ &lt; 90%, BG &lt; 70 or &gt; 300.</p>'));
+  function upd(){const r=c.querySelector('.req');if(r){r.className='req'+(vsDone()?' done':'');r.textContent=vsDone()?'Complete':'Required';}}
+  return c;
+}
+function vsDone(){if(skipped('A.vs'))return true;const v=V();return ['A.bp','A.hr','A.rr','A.spo2','A.temp','A.o2'].every(k=>len(v[k]))&&!!v['A.trend'];}
+function sysDone(s){
+  if(skipped('A.'+s.id))return true;const v=V();
+  if(!v['A.'+s.id+'.src']||!v['A.'+s.id+'.src'].length)return false;
+  for(const f of s.f){if(f.opt)continue;const val=v[fk(s,f)];if(!val)return false;
+    if(optFlag(f,val)===1){if(len(v[fk(s,f)+'.d'])<5)return false;if(!autoNew(s,f)&&!v[fk(s,f)+'.new'])return false;}}
+  if(s.id==='pain'&&v['A.pain.score']&&v['A.pain.score']!=='0'&&!len(v['A.pain.loc']))return false;
+  return true;
+}
+function replaceCard(old,fn,arg){const n=fn(arg);old.replaceWith(n);refreshLive();}
+function sysCard(s){
+  const c=el('div','sys');c.id='sys_'+s.id;const req=sysRequired(s);const done=sysDone(s);
+  const h=el('div','sh');h.appendChild(el('h3',null,esc(s.t)));h.appendChild(el('span','req'+(done&&(req||s.touched)?' done':(req?'':' opt')),done?'Complete':(req?'Required':'Optional this week')));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.'+s.id,s.t,()=>replaceCard(c,sysCard,s)));
+  if(skipped('A.'+s.id))return c;
+  const v=V();
+  b.appendChild(fld('How I know',null,chipGroup(['I assessed','Bedside report','Chart'],()=>v['A.'+s.id+'.src'],x=>{setV('A.'+s.id+'.src',x);upd();},true)));
+  s.f.forEach(f=>{
+    const row=el('div','find');const k=fk(s,f);
+    row.appendChild(el('div','fl',esc(f.l)+(f.s?'<small>'+esc(f.s)+'</small>':'')+(f.opt?'<small>optional</small>':'')));
+    const right=el('div');
+    const sel=selectEl(f.o.map(o=>o[0]),v[k],x=>{setV(k,x);replaceCard(c,sysCard,s);const nc=document.getElementById('sys_'+s.id);const ns=nc&&nc.querySelector('[data-fk="'+k+'"]');if(ns)ns.focus();});
+    sel.dataset.fk=k;if(isAbn(s,f))sel.classList.add('abn');right.appendChild(sel);
+    if(isAbn(s,f)){
+      const ab=el('div','abnbox');ab.appendChild(el('div','lab','Abnormal — describe exactly what you saw, heard, or measured'));
+      const d=el('input');d.type='text';d.value=v[k+'.d']||'';d.placeholder=f.k==='edema'?'Where? e.g., both ankles, pit lasts 10 seconds':'e.g., where, how much, what the patient said';
+      let lb=lintBox(d.value,'data');d.addEventListener('input',()=>{setV(k+'.d',d.value);const x=lintBox(d.value,'data');ab.replaceChild(x,lb);lb=x;upd();});ab.append(d,lb);
+      if(autoNew(s,f))ab.appendChild(el('div','alert','<b>This counts as new confusion.</b>Your Background tab says baseline cognition was intact. Notify your instructor AND the primary nurse immediately.'));
+      else ab.appendChild(fld('Compared with baseline',null,selectEl(['New today','Not new (baseline for this patient)','Not sure — I will ask the primary nurse'],v[k+'.new'],x=>{setV(k+'.new',x);upd();drawDetected();})));
+      right.appendChild(ab);
+    }
+    if(f.tip)right.appendChild(el('details','tip','<summary>What is normal?</summary><p>'+esc(f.tip)+'</p>'));
+    row.appendChild(right);b.appendChild(row);
+  });
+  if(s.id==='pain'){
+    const g=el('div','grid g2');g.style.marginTop='8px';
+    const loc=el('input');loc.type='text';loc.placeholder='e.g., left hip';loc.value=v['A.pain.loc']||'';loc.addEventListener('input',()=>{setV('A.pain.loc',loc.value);upd();});
+    g.append(fld('Location',null,loc),fld('Describes it as',null,chipGroup(PAIN_WORDS,()=>v['A.pain.words'],x=>setV('A.pain.words',x),true)));b.appendChild(g);
+  }
+  function upd(){const r=c.querySelector('.req');const d=sysDone(s);if(r){r.className='req'+(d?' done':(req?'':' opt'));r.textContent=d?'Complete':(req?'Required':'Optional this week');}}
+  return c;
+}
+function drawNewList(){
+  const w=document.querySelector('[data-live="newlist"]');if(!w)return;w.innerHTML='';
+  const L=abnList().filter(a=>a.isNew);
+  if(L.length)w.appendChild(el('div','info','<b>New findings you marked:</b> '+esc(L.map(a=>a.s.t+' — '+a.val).join(' · '))+'. Explain below what they mean together.'));
+}
+
+/* ---------- rounds ---------- */
+function roundTriggers(d){const t=vsTriggers(d);(d.trig||[]).forEach(x=>t.push(x));if(d.base==='Worse')t.push('Worse than baseline');return t;}
+function modeText(){const w=week();return w>=3?'Week '+w+': full DAR entries — at least 40 characters in each D-A-R box.':(w?'Week '+w+': one clear sentence (15 characters or more) in each D-A-R box.':'Set your clinical week on the Start tab.');}
+function isLate(t){const r=S.rounds[t];return !!(r.saved&&r.saved.late);}
+function computeLate(t,stated){
+  const now=nowMin();const st=toMin(stated);const reasons=[];
+  if(now-st>60)reasons.push('charted '+fmtDiff(now-st)+' after the round');
+  ROUNDS.forEach(o=>{const r=S.rounds[o];if(o!==t&&r.saved&&toMin(r.saved.time)>st)reasons.push('entered after a later round was charted');});
+  return reasons.join('; ');
+}
+function recheckItems(){return abnList().filter(a=>a.s.id!=='pain').map(a=>({key:fk(a.s,a.f),label:a.s.t+': '+a.f.l,was:a.val,opts:a.f.o.map(o=>o[0])}));}
+function renderRounds(host){
+  host.appendChild(el('div','card std','<p><b>Chart like a nurse</b> <span class="h" style="display:inline">Timby Ch. 9, Criteria for Legally Defensible Charting (Box 9-1)</span></p><p>Time every entry as you make it, in order. This tool labels out-of-sequence entries “late entry” automatically. Record facts, not interpretations; quote the patient. Approved abbreviations only. A saved round cannot be erased: corrections keep the original visible with your initials, as on paper.</p><p><b>Documenting is not reporting.</b> If a notify trigger appears, tell your instructor AND the primary nurse first, then chart who you told and when. The tool will not save the round until you do.</p>'));
+  host.appendChild(el('div','info',esc(modeText())));
+  ROUNDS.forEach(t=>host.appendChild(roundCard(t)));
+}
+function roundStatus(t){
+  const r=S.rounds[t];
+  if(r.status==='saved')return r.saved.late?{cls:'late',txt:'Late entry · charted '+r.saved.savedAt}:{cls:'saved',txt:'Charted '+r.saved.savedAt};
+  if(skipped('round.'+t))return {cls:'missed',txt:'Skipped with permission'};
+  const d=nowMin()-toMin(t);
+  if(d>=0)return {cls:'over',txt:'Due now'+(d>0?' · '+fmtDiff(d)+' over':'')};
+  return {cls:'due',txt:'In '+fmtDiff(d)};
+}
+function roundOpen(t){return S.rounds[t].status!=='saved'&&!skipped('round.'+t);}
+function roundCard(t){
+  const r=S.rounds[t];const card=el('div','round');card.id='round_'+t;
+  const h=el('div','rh');h.appendChild(el('span','rt',t+' round'));const st=roundStatus(t);h.appendChild(el('span','pill '+st.cls,esc(st.txt)));card.appendChild(h);
+  const b=el('div','rb');card.appendChild(b);
+  if(r.status==='saved'){renderLocked(t,b);return card;}
+  b.appendChild(skipControl('round.'+t,t+' round',()=>rerender()));
+  if(skipped('round.'+t))return card;
+  const first=ROUNDS.find(roundOpen);
+  if(t===first||S.expand[t])renderDraft(t,b);
+  else{const o=el('button','btn sm','Open the '+t+' round');o.type='button';o.onclick=()=>{S.expand[t]=1;save();rerender();const c=document.getElementById('round_'+t);if(c)c.scrollIntoView({block:'start'});};b.appendChild(o);}
+  return card;
+}
+function renderDraft(t,b){
+  const r=S.rounds[t];const d=r.draft;const set=(k,v)=>{d[k]=v;save();liveRound(t);};
+  const tr=el('div','timein');const ti=el('input');ti.type='text';ti.inputMode='numeric';ti.maxLength=4;ti.placeholder='HHMM';ti.value=d.time||'';
+  ti.addEventListener('input',()=>{ti.value=ti.value.replace(/\D/g,'');set('time',ti.value);});
+  const nb=el('button','btn sm','Now');nb.type='button';nb.onclick=()=>{ti.value=nowHHMM();set('time',ti.value);};tr.append(ti,nb);
+  const scale=V()['A.pain.scale']||'0–10';
+  const g=el('div','grid g2');g.append(fld('Actual time of round','military time',tr),fld('Pain','scale: '+scale+' (same as your Assessment)',selectEl(['0','1','2','3','4','5','6','7','8','9','10','Asleep — not assessed'],d.pain,x=>set('pain',x))));b.appendChild(g);
+  b.appendChild(fld('Rounding check','tap each one you completed',chipGroup(ROUND_CHECKS,()=>d.checks,v=>set('checks',v),true)));
+  const rc=recheckItems();
+  if(rc.length){const w=el('div','card');w.appendChild(el('h3',null,'Recheck your abnormal findings'));w.appendChild(el('div','h','From your morning assessment. Choose what you find now.'));d.rechecks=d.rechecks||{};
+    rc.forEach(i=>{const x=el('div','rcheck');x.appendChild(el('div',null,'<b>'+esc(i.label)+'</b> <span class="was">this morning: '+esc(i.was)+'</span>'));x.appendChild(selectEl(i.opts.concat(['Not rechecked this round']),d.rechecks[i.key],v=>{d.rechecks[i.key]=v;save();}));w.appendChild(x);});
+    b.appendChild(w);}
+  const vg=el('div','grid g6 vsg');[['bp','BP'],['hr','HR'],['rr','RR'],['spo2','SpO₂'],['temp','Temp'],['bg','BG']].forEach(([k,l])=>{const i=el('input');i.type='text';i.value=d[k]||'';i.addEventListener('input',()=>set(k,i.value));vg.appendChild(fld(l,null,i));});
+  const vw=el('div','field');vw.appendChild(el('div','lab','Vital signs if taken this round<span class="h">leave blank if not due</span>'));vw.appendChild(vg);b.appendChild(vw);
+  b.appendChild(fld('Anything new this round?','check any that apply — each one requires you to notify',chipGroup(TRIG_CHECKS,()=>d.trig,v=>set('trig',v),true,true)));
+  const dar=el('div','dar');
+  [['D','Data','What I saw, heard, measured. Quote the patient.','Patient states “…”. I observed …'],['A','Action','What I did and who I told.','I … I reported … to …'],['R','Response','How the patient responded, and when.','At ____ patient states “…”. I observed …']].forEach(([k,name,hint,ph])=>{
+    const w=el('div','field');const lab=el('label',null,'<span class="L">'+k+'</span>'+name+'<span class="h">'+esc(hint)+'</span>');const ta=el('textarea');ta.rows=5;ta.id='dar_'+t+'_'+k;lab.htmlFor=ta.id;ta.value=d[k]||'';ta.placeholder=ph;
+    let lb=lintBox(ta.value,k);ta.addEventListener('input',()=>{set(k,ta.value);const x=lintBox(ta.value,k);w.replaceChild(x,lb);lb=x;});
+    w.append(lab,ta,lb);dar.appendChild(w);});
+  b.appendChild(dar);
+  const g2=el('div','grid g2');
+  g2.append(fld('Disposition','where the patient is now',selectEl(DISP,d.disp,v=>set('disp',v))),fld('Compared with baseline',null,selectEl(BASE,d.base,v=>set('base',v))));
+  b.appendChild(g2);
+  const live=el('div');live.dataset.live='round_'+t;b.appendChild(live);
+  const nf=el('div','card');nf.appendChild(el('h3',null,'Notify'));
+  const nt=el('div','grid g2');nt.hidden=d.notify!=='Yes';
+  nf.appendChild(fld('Did you report anything this round?',null,chipGroup(['No','Yes'],()=>d.notify,v=>{set('notify',v);nt.hidden=v!=='Yes';},false)));
+  [['instT','Instructor told at'],['rnT','Primary nurse told at']].forEach(([k,l])=>{const row=el('div','timein');const i=el('input');i.type='text';i.inputMode='numeric';i.maxLength=4;i.placeholder='HHMM';i.value=d[k]||'';i.addEventListener('input',()=>{i.value=i.value.replace(/\D/g,'');set(k,i.value);});const bb=el('button','btn sm','Now');bb.type='button';bb.onclick=()=>{i.value=nowHHMM();set(k,i.value);};row.append(i,bb);nt.appendChild(fld(l,null,row));});
+  nf.appendChild(nt);
+  nf.appendChild(fld('Linked','this round also completes',chipGroup(['My R follow-up','Med response'],()=>d.linked,v=>set('linked',v),true)));
+  b.appendChild(nf);
+  const sig=el('input');sig.type='text';sig.placeholder='First Last, SVN';sig.value=d.sig||(V()['meta.student']?V()['meta.student']+', SVN':'');d.sig=sig.value;sig.addEventListener('input',()=>set('sig',sig.value));
+  b.appendChild(fld('Signature','name + SVN',sig));
+  const errs=el('ul','errs');const sv=el('button','btn pri','Save round');sv.type='button';sv.onclick=()=>saveRound(t,errs);
+  b.append(sv,errs);setTimeout(()=>liveRound(t),0);
+}
+function liveRound(t){
+  const host=document.querySelector('[data-live="round_'+t+'"]');if(!host)return;const tr=roundTriggers(S.rounds[t].draft);host.innerHTML='';
+  if(tr.length)host.appendChild(el('div','alert','<b>Notify your instructor AND the primary nurse now.</b>'+esc(tr.join(' · '))+'. Then record who you told and when in Notify. This round will not save until you do.'));
+}
+function saveRound(t,errs){
+  const r=S.rounds[t];const d=r.draft;const e=[];errs.innerHTML='';const st=toMin(d.time);
+  if(st==null)e.push('Enter the actual time of the round in military time (tap Now).');
+  else if(st-nowMin()>10)e.push('The round time is later than the current time. Chart rounds after you do them.');
+  if(!d.pain)e.push('Choose a pain score (or “Asleep — not assessed”).');
+  const ml=minText();['D','A','R'].forEach(k=>{if(len(d[k])<ml)e.push(k+' needs at least '+ml+' characters.');});
+  if(!d.disp)e.push('Choose the patient’s disposition (where they are now).');
+  if(!d.base)e.push('Choose same, better, or worse than baseline.');
+  const tr=roundTriggers(d);
+  if(tr.length&&(d.notify!=='Yes'||toMin(d.instT)==null||toMin(d.rnT)==null))e.push('Notify trigger present ('+tr.join(', ')+'). Record “Yes” and the times you told your instructor and the primary nurse.');
+  if(d.notify==='Yes'&&toMin(d.instT)==null&&toMin(d.rnT)==null)e.push('You marked that you reported something. Enter when you told your instructor and/or the primary nurse.');
+  if(!len(d.sig))e.push('Sign the round: your name + SVN.');
+  if(e.length){e.forEach(x=>errs.appendChild(el('li',null,esc(x))));errs.scrollIntoView({block:'nearest',behavior:'smooth'});return;}
+  if(privHits(['D','A','R'].map(k=>d[k]).join(' '))&&!confirm('Some text looks like a patient identifier (name, room, date, or record number). Select OK only if you have checked and it is not an identifier.'))return;
+  const late=computeLate(t,d.time);
+  r.saved=Object.assign({},d,{savedAt:nowHHMM(),late,recheckLabels:recheckItems().reduce((m,i)=>{m[i.key]=i.label;return m;},{})});r.status='saved';r.draft={};
+  logIt(t+' round charted at '+r.saved.savedAt+' (round time '+d.time+')'+(late?' — LATE ENTRY: '+late:''));
+  if(tr.length)logIt(t+' notify: '+tr.join(', ')+' — instructor '+(d.instT||'—')+', primary nurse '+(d.rnT||'—'));
+  save();rerender();const c=document.getElementById('round_'+t);if(c){c.classList.add('flash');c.scrollIntoView({block:'start',behavior:'smooth'});}
+}
+function vsLine(s){return [['BP',s.bp],['HR',s.hr],['RR',s.rr],['SpO₂',s.spo2],['T',s.temp],['BG',s.bg]].filter(x=>x[1]).map(x=>x[0]+' '+x[1]).join(' · ');}
+function recheckLine(s){const r=s.rechecks||{};return Object.keys(r).filter(k=>r[k]).map(k=>(s.recheckLabels&&s.recheckLabels[k]||k)+' → '+r[k]).join(' · ');}
+function renderLocked(t,b){
+  const r=S.rounds[t];const s=r.saved;
+  if(s.late)b.appendChild(el('div','alert','<b>Late entry</b>'+esc(s.late)+'. This label prints on your PDF.'));
+  b.appendChild(el('div','locked','<p><span class="k">Round time</span> '+esc(s.time)+' · <span class="k">Pain</span> '+esc(s.pain||'—')+'</p><p><span class="k">Checks</span> '+esc((s.checks||[]).join(', ')||'none recorded')+'</p>'+(recheckLine(s)?'<p><span class="k">Rechecks</span> '+esc(recheckLine(s))+'</p>':'')+(vsLine(s)?'<p><span class="k">VS</span> '+esc(vsLine(s))+'</p>':'')+((s.trig||[]).length?'<p><span class="k">New this round</span> '+esc(s.trig.join(', '))+'</p>':'')));
+  const dar=el('div','dar');
+  ['D','A','R'].forEach(k=>{
+    const w=el('div','field locked');w.appendChild(el('div','lab','<span class="L">'+k+'</span>'+({D:'Data',A:'Action',R:'Response'})[k]));
+    r.history.filter(h=>h.field===k).forEach(h=>w.appendChild(el('div','hist','<s>'+esc(h.old)+'</s> — corrected '+esc(h.at)+' by '+esc(h.initials))));
+    w.appendChild(el('p',null,esc(s[k])));
+    const cb=el('button','toggle','Correct this entry');cb.type='button';
+    cb.onclick=()=>{cb.hidden=true;const ta=el('textarea');ta.rows=4;ta.value=s[k];const ini=el('input');ini.type='text';ini.placeholder='Your initials';ini.maxLength=4;ini.style.maxWidth='130px';
+      const ok=el('button','btn sm pri','Save correction');ok.type='button';const msg=el('div','errs');
+      ok.onclick=()=>{if(ta.value.trim()===s[k].trim()){msg.textContent='Change the text before saving a correction.';return;}if(len(ini.value)<2){msg.textContent='Add your initials.';return;}
+        r.history.push({field:k,old:s[k],new:ta.value,at:nowHHMM(),initials:ini.value.toUpperCase()});s[k]=ta.value;logIt(t+' round '+k+' corrected by '+ini.value.toUpperCase());save();rerender();};
+      const row=el('div','row');row.append(ini,ok);w.append(ta,row,msg);};
+    w.appendChild(cb);dar.appendChild(w);});
+  b.appendChild(dar);
+  b.appendChild(el('div','locked','<p><span class="k">Disposition</span> '+esc(s.disp)+' · <span class="k">vs. baseline</span> '+esc(s.base)+'</p><p><span class="k">Notify</span> '+(s.notify==='Yes'?'Yes — instructor '+esc(s.instT||'—')+', primary nurse '+esc(s.rnT||'—'):'No')+((s.linked||[]).length?' · <span class="k">Linked</span> '+esc(s.linked.join(', ')):'')+'</p><p><span class="k">Signed</span> '+esc(s.sig)+' · charted '+esc(s.savedAt)+'</p>'));
+}
+
+/* ---------- end of shift ---------- */
+function renderEnd(host){
+  const v=V();const cmp=el('div','compare');
+  cmp.appendChild(el('div',null,'<b>This morning: current condition</b>'+esc((v['S.cond']||'—')+(v['S.condWhy']?' — '+v['S.condWhy']:''))));
+  cmp.appendChild(el('div',null,'<b>This morning: your Q3 hypothesis</b>'+esc((v['CR.sick']?v['CR.sick']+' — ':'')+(v['CR.q3']||'—'))));
+  const c=el('div','card');c.appendChild(el('h3',null,'Compare'));c.appendChild(cmp);host.appendChild(c);
+  renderFields([
+   {t:'grid',cols:2,f:[{k:'E.loc',l:'Where my patient is now',t:'select',o:DISP},{k:'E.base',l:'Compared with this morning’s baseline',t:'select',o:BASE}]},
+   {k:'E.disp',l:'What changed, and what did not?',t:'area',rows:3,lint:'data',ph:'Since this morning, my patient …'},
+   {k:'E.hand',l:'Handoff to primary nurse',t:'radio',o:['Given','Not given']},
+   {k:'E.handTime',l:'Handoff given at',t:'time',show:v=>v['E.hand']==='Given'},
+   {k:'E.handKey',l:'Key item I passed on, and anything left undone',t:'area',rows:2},
+   {k:'E.cjmm',l:'CJMM Evaluate Outcomes',h:'Was my Q3 hypothesis right? Which cue confirmed or changed it?',t:'area',rows:3,ph:'My hypothesis was … It was confirmed / changed when …'}
+  ],host);
+  const done=ROUNDS.filter(t=>S.rounds[t].status==='saved'),sk=ROUNDS.filter(t=>skipped('round.'+t)),open=ROUNDS.filter(roundOpen);
+  host.appendChild(el('div','info','<b>Rounds charted:</b> '+(done.join(', ')||'none')+(sk.length?' · <b>Skipped with permission:</b> '+sk.join(', '):'')+(open.length?' · <b>Still open:</b> '+open.join(', '):'')));
+}
+
+/* ---------- requirements ---------- */
+function reqs(){
+  const v=V();const L=[];const add=(sec,label,ok)=>L.push({sec,label,ok});const t=minText();
+  ['meta.student','meta.section','meta.week','meta.age','meta.sex'].forEach(k=>{});
+  add('setup','Start: name, section, week, age range, sex',['meta.student','meta.section','meta.week','meta.age','meta.sex'].every(k=>len(v[k])));
+  if(!skipped('S')){
+    add('S','Situation: code status',!!v['S.code']);
+    add('S','Situation: isolation',(v['S.iso']||[]).length>0);
+    add('S','Situation: allergies (NKDA, or each allergy with its reaction)',!!v['S.nkda']||([1,2,3].some(n=>len(v['S.al'+n]))&&[1,2,3].every(n=>!len(v['S.al'+n])||!!v['S.alr'+n])));
+    add('S','Situation: current condition and what tells you that',!!v['S.cond']&&len(v['S.condWhy'])>=t);
+    add('S','Situation: immediate concern',len(v['S.concern'])>=t);
+  }
+  if(!skipped('B')){
+    add('B','Background: reason for rehab and exact diagnosis',!!v['B.dxCat']&&len(v['B.dx'])>2);
+    add('B','Background: relevant history (or None), with how it changes care',(v['B.hx']||[]).length>0&&((v['B.hx']||[]).includes('None')||len(v['B.hxImpact'])>=t));
+    add('B','Background: baseline cognition, function, and where they lived',!!v['B.cog']&&!!v['B.func']&&!!v['B.lived']);
+  }
+  add('A','Assessment: vital signs',vsDone());
+  SYS.forEach(s=>{if(sysRequired(s))add('A','Assessment: '+s.t,sysDone(s));});
+  add('A','Assessment: change from baseline',len(v['A.change'])>=t);
+  {const tr=immediateTriggers();if(tr.length)add('A','Notify: time you told your instructor and the primary nurse ('+tr.join(', ')+') — cannot be skipped',toMin(v['R.instT'])!=null&&toMin(v['R.rnT'])!=null);}
+  if(!skipped('CR')){add('CR','Clinical Reasoning: Q1',len(v['CR.q1'])>=t);add('CR','Clinical Reasoning: Q2 (at least one)',len(v['CR.q2a'])>=t);add('CR','Clinical Reasoning: Q3 rating and hypothesis',!!v['CR.sick']&&len(v['CR.q3'])>=t);if(week()>=3)add('CR','Clinical Reasoning: most urgent problem',len(v['CR.priority'])>=t);}
+  if(medsRequired()&&!skipped('Rx')){const p='M1.';const pre=v[p+'pre'];
+    add('Rx','Medication 1: name, dose, what it does and why',len(v[p+'name'])&&len(v[p+'dose'])&&len(v[p+'what'])>=t);
+    add('Rx','Medication 1: safe range check',!!v[p+'inrange']);
+    add('Rx','Medication 1: check before giving, with actual value',!!pre&&(pre==='None required'||len(v[p+'actual'])>1));
+    add('Rx','Medication 1: decision, adverse effects, teaching',!!v[p+'decision']&&len(v[p+'adverse'])>2&&len(v[p+'teach'])>=t);
+    if(v[p+'decision']==='Give')add('Rx','Medication 1: all rights checked',RIGHTS.every(x=>(v[p+'rights']||[]).includes(x)));
+  }
+  if(!skipped('R')){
+    add('R','Recommendation: what you are requesting',(v['R.type']||[]).length>0&&len(v['R.what'])>2&&len(v['R.for'])>2&&len(v['R.by'])>1);
+    add('R','Recommendation: because',len(v['R.because'])>=t);
+  }
+  ROUNDS.forEach(r=>add('N','Rounds: '+r+' charted or skipped with permission',!roundOpen(r)));
+  if(!skipped('E'))add('E','End of shift: where the patient is, compared with baseline, what changed, handoff',!!v['E.loc']&&!!v['E.base']&&len(v['E.disp'])>=t&&!!v['E.hand']);
+  if(!skipped('J'))['J.what','J.well','J.hard','J.why','J.learned','J.plan'].forEach((k,i)=>add('J','Reflection: box '+['1','3 (went well)','3 (was hard)','4','5','6'][i],len(v[k])>=t));
+  return L;
+}
+
+/* ---------- export ---------- */
+function fileName(){const v=V();const last=(v['meta.student']||'Student').trim().split(/\s+/).pop().replace(/[^A-Za-z\-]/g,'')||'Student';return 'VNSG1260_'+(v['meta.section']||'Sec')+'_Wk'+(v['meta.week']||'0')+'_'+last+'_SBAR';}
+function renderExport(host){
+  const L=reqs();const miss=L.filter(x=>!x.ok);
+  const c=el('div','card');c.appendChild(el('h3',null,miss.length?miss.length+' required item'+(miss.length>1?'s':'')+' left':'Everything required is complete'));
+  const ul=el('ul','checklist');
+  if(!miss.length)ul.appendChild(el('li','y','Ready to attest and save.'));
+  miss.forEach(m=>{const li=el('li','n',esc(m.label));const g=el('button','btn sm','Go');g.type='button';g.onclick=()=>{S.view=m.sec;save();rerender();window.scrollTo({top:0});};li.appendChild(g);ul.appendChild(li);});
+  const lateR=ROUNDS.filter(isLate);if(lateR.length)ul.appendChild(el('li','w','Late entries: '+lateR.join(', ')+'. These are labeled on your PDF.'));
+  const sk=Object.values(S.skips);if(sk.length)ul.appendChild(el('li','w','Skipped with instructor permission: '+sk.map(s=>s.label+' ('+s.initials+')').join(', ')+'.'));
+  let priv=0;Object.keys(V()).forEach(k=>{if(typeof V()[k]==='string'&&k!=='meta.student'&&privHits(V()[k]))priv++;});ROUNDS.forEach(t=>{const s=S.rounds[t].saved;if(s&&privHits(s.D+' '+s.A+' '+s.R))priv++;});
+  if(priv)ul.appendChild(el('li','w','Text in '+priv+' place'+(priv>1?'s':'')+' looks like a patient identifier. Review the purple prompts.'));
+  c.appendChild(ul);host.appendChild(c);
+  const a=el('div','card');a.appendChild(el('h3',null,'Attestation'));
+  const ab=chip('I attest these entries reflect care I provided and observations I made during this clinical shift.',S.attest.ok,()=>{S.attest.ok=!S.attest.ok;ab.setAttribute('aria-pressed',S.attest.ok?'true':'false');save();upd();});
+  const an=el('input');an.type='text';an.placeholder='Type your full name';an.value=S.attest.name||'';an.addEventListener('input',()=>{S.attest.name=an.value;save();upd();});
+  a.append(ab,fld('Typed signature','must match your name on the Start tab',an));host.appendChild(a);
+  const p=el('div','card');p.appendChild(el('h3',null,'Save your PDF'));
+  p.appendChild(el('p',null,'File name: <b class="num">'+esc(fileName())+'.pdf</b>'));
+  p.appendChild(el('p',null,'Tap <b>Save as PDF</b>. In the print window, choose <b>Save as PDF</b> as the printer (on iPhone: tap Share or Print, then spread two fingers on the preview and save to Files). Then upload the PDF to Blackboard.'));
+  const why=el('ul','errs');const go=el('button','btn pri','Save as PDF');go.type='button';
+  go.onclick=()=>{logIt('PDF exported');buildPrint();save();const old=document.title;document.title=fileName();setTimeout(()=>{window.print();setTimeout(()=>{document.title=old;},800);},50);};
+  p.append(go,why);host.appendChild(p);
+  function upd(){const nameOK=len(S.attest.name)&&S.attest.name.trim().toLowerCase()===(V()['meta.student']||'').trim().toLowerCase();why.innerHTML='';
+    if(miss.length)why.appendChild(el('li',null,'Complete or skip (with instructor permission) the '+miss.length+' required item'+(miss.length>1?'s':'')+' listed above.'));
+    if(!S.attest.ok)why.appendChild(el('li',null,'Check the attestation.'));if(!nameOK)why.appendChild(el('li',null,'Type your name exactly as on the Start tab.'));
+    go.disabled=!!(miss.length||!S.attest.ok||!nameOK);}
+  upd();
+  const z=el('div','card');z.appendChild(el('h3',null,'After you upload to Blackboard'));z.appendChild(el('p',null,'Clear this device so no clinical information stays on it. This cannot be undone.'));
+  const cl=el('button','btn danger','Clear all data from this device');cl.type='button';
+  cl.onclick=()=>{if(!confirm('Clear everything you charted today from this device? Make sure your PDF is uploaded first.'))return;try{localStorage.removeItem(KEY);}catch(e){}S=blank();rerender();window.scrollTo(0,0);};
+  z.appendChild(cl);host.appendChild(z);
+}
+
+/* ---------- print ---------- */
+function pv(k){const v=V()[k];return v&&String(v).trim()?'<div class="pv">'+esc(v)+'</div>':'';}
+function pt(s){return s&&String(s).trim()?'<div class="pv">'+esc(s)+'</div>':'';}
+function pc(k,opts){const v=V()[k];return opts.map(o=>((Array.isArray(v)?v.includes(o):v===o)?'☒ ':'☐ ')+esc(o)).join('&nbsp;&nbsp; ');}
+function cell(label,hint,body,span,cls){return '<td'+(span>1?' colspan="'+span+'"':'')+(cls?' class="'+cls+'"':'')+'><span class="pl">'+label+'</span>'+(hint?' <span class="ph2">'+hint+'</span>':'')+(body||'')+'</td>';}
+function tbl(cols,rows){return '<table class="pt avoid"><colgroup>'+'<col>'.repeat(cols)+'</colgroup>'+rows.map(r=>'<tr>'+r+'</tr>').join('')+'</table>';}
+function secH(L,t,sub){return '<div class="psec"><span class="L">'+L+'</span>'+t+'</div>'+(sub?'<div class="psub">'+sub+'</div>':'');}
+function skipRow(id,cols){const s=S.skips[id];return s?tbl(1,[cell('<span class="skp">SKIPPED WITH INSTRUCTOR PERMISSION</span>','','<div class="pv">Approved by '+esc(s.initials)+' at '+esc(s.at)+' — '+esc(s.reason)+'</div>',1)]):'';}
+const FOOT='<div class="pfoot">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · Student learning record — not part of the medical record</div>';
+function sysPrint(s){
+  const v=V();if(S.skips['A.'+s.id])return cell(esc(s.t),'','<div class="skp">Skipped with instructor permission — '+esc(S.skips['A.'+s.id].initials)+' at '+esc(S.skips['A.'+s.id].at)+': '+esc(S.skips['A.'+s.id].reason)+'</div>',3);
+  if(!sysRequired(s)&&!s.f.some(f=>v[fk(s,f)]))return cell(esc(s.t),'','<div class="ph2">Not assessed — optional this week.</div>',3);
+  const parts=s.f.map(f=>{const val=v[fk(s,f)];if(!val)return f.opt?'':esc(f.l)+': <span class="ph2">not recorded</span>';
+    if(optFlag(f,val)===1)return '<span class="abn">'+esc(f.l)+': '+esc(val)+' — '+esc(v[fk(s,f)+'.d']||'')+' ['+esc(autoNew(s,f)?'NEW — baseline intact':(v[fk(s,f)+'.new']||'baseline not stated'))+']</span>';
+    return esc(f.l)+': '+esc(val);}).filter(Boolean);
+  if(s.id==='pain'&&(v['A.pain.loc']||(v['A.pain.words']||[]).length))parts.push('Location: '+esc(v['A.pain.loc']||'—')+' · '+esc((v['A.pain.words']||[]).join(', ')));
+  return cell(esc(s.t),'How I know: '+esc((v['A.'+s.id+'.src']||[]).join(', ')||'—')+(sysRequired(s)?'':' · optional this week'),'<div class="pv">'+parts.join(' &nbsp;·&nbsp; ')+'</div>',3);
+}
+function medPrint(n){const p='M'+n+'.';const v=V();if(!len(v[p+'name'])&&n===2)return '';
+  if(!len(v[p+'name'])&&!medsRequired())return tbl(1,[cell('MED '+n,'','<div class="ph2">Not required until Week 4 — not completed.</div>')]);
+  return tbl(3,[
+ cell('MED '+n+' Generic / brand','',pv(p+'name'))+cell('Class','',pv(p+'class'))+cell('Dose · route · time',pc(p+'sched',['Scheduled','PRN']),pv(p+'dose')),
+ cell('What it does and why this patient needs it','',pv(p+'what'),2)+cell('Safe dose range','In range? '+pc(p+'inrange',['Yes','No → hold + notify']),pv(p+'range')),
+ cell('Check before giving','',pv(p+'pre'))+cell('Patient’s actual value + time','',pv(p+'actual'))+cell('Decision','','<div>'+pc(p+'decision',['Give','Hold + notify instructor'])+'</div>'),
+ cell('Priority adverse effects','',pv(p+'adverse'))+cell('Interactions','',pv(p+'inter'))+cell('Evaluate response','reassess at '+esc(v[p+'evalTime']||'____'),pv(p+'eval')),
+ cell('Dose calculation','show work',pv(p+'calc'),2)+cell('Patient teaching','',pv(p+'teach')),
+ cell('Geriatric','','<div>'+pc(p+'geri',GERI)+'</div><div>Form: '+pc(p+'form',['Whole','May crush','DO NOT crush (ER/EC/SL)','Needs alternate form'])+'</div>',3),
+ cell('Rights:','',' '+pc(p+'rights',RIGHTS),3)]);}
+function roundPrint(t){
+  const r=S.rounds[t];
+  if(S.skips['round.'+t]&&r.status!=='saved'){const s=S.skips['round.'+t];return tbl(1,[cell(t+' ROUND — <span class="skp">SKIPPED WITH INSTRUCTOR PERMISSION</span>','','<div class="pv">Approved by '+esc(s.initials)+' at '+esc(s.at)+' — '+esc(s.reason)+'</div>',1,'sh')]);}
+  if(r.status!=='saved')return tbl(1,[cell(t+' ROUND — not charted','','',1,'sh')]);
+  const s=r.saved;const hist=k=>r.history.filter(h=>h.field===k).map(h=>'<div><s>'+esc(h.old)+'</s> <span class="ph2">corrected '+esc(h.at)+' '+esc(h.initials)+'</span></div>').join('');const tr=roundTriggers(s);
+  return tbl(3,[
+   cell(t+' ROUND','','&nbsp; Actual time <b>'+esc(s.time)+'</b> &nbsp; Pain <b>'+esc(s.pain||'—')+'</b> &nbsp; Charted <b>'+esc(s.savedAt)+'</b>'+(s.late?' &nbsp;<span class="late">LATE ENTRY — '+esc(s.late)+'</span>':'')+'<div>'+ROUND_CHECKS.map(o=>((s.checks||[]).includes(o)?'☒ ':'☐ ')+esc(o)).join('&nbsp;&nbsp; ')+'</div>'+(recheckLine(s)?'<div>Rechecks: '+esc(recheckLine(s))+'</div>':'')+(vsLine(s)?'<div>VS: '+esc(vsLine(s))+'</div>':''),3,'sh'),
+   cell('D Data','',hist('D')+pt(s.D))+cell('A Action','',hist('A')+pt(s.A))+cell('R Response','',hist('R')+pt(s.R)),
+   cell('Disposition','',' '+esc(s.disp)+' &nbsp; <b>vs. baseline</b> '+esc(s.base)+'<div><b>Notify trigger?</b> '+(tr.length?'<span class="trig">Yes — '+esc(tr.join(', '))+'</span>':'No')+' &nbsp; <b>Reported:</b> '+(s.notify==='Yes'?'instructor '+esc(s.instT||'—')+', primary nurse '+esc(s.rnT||'—'):'No')+' &nbsp; <b>Linked:</b> '+esc((s.linked||[]).join(', ')||'—')+' &nbsp; <b>Signed:</b> '+esc(s.sig)+' &nbsp; <b>Instructor</b> ______</div>',3)]);
+}
+function buildPrint(){
+  const v=V();let h='';
+  const allergies=v['S.nkda']?'No known drug allergies (NKDA)':[1,2,3].filter(n=>len(v['S.al'+n])).map(n=>v['S.al'+n]+' — '+(v['S.alr'+n]||'reaction not recorded')).join('; ');
+  h+='<div class="pp"><div class="ph"><b>SBAR CLINICAL REPORT SHEET</b><span>Start-of-Day Capture · Report to Instructor · q2h Nurse’s Notes</span></div><div class="psub">San Jacinto College South · VNSG 1260 Clinical I · Section '+esc(v['meta.section']||'___')+'</div>';
+  h+=tbl(3,[cell('Student','',pv('meta.student'))+cell('Clinical Week #','',pv('meta.week'))+cell('Patient:','',' Age range '+pc('meta.age',['60–69','70–79','80–89','90+'])+'&nbsp;&nbsp; Sex '+pc('meta.sex',['M','F']))]);
+  h+='<div class="pnote"><b>NO PATIENT IDENTIFIERS.</b> Record age range and sex only — no name, initials, room/bed, dates, MRN, or physician names.</div>';
+  h+=secH('S','SITUATION')+skipRow('S');
+  if(!S.skips.S)h+=tbl(2,[cell('Code status','','<div>'+pc('S.code',['Full','DNR','Other'])+(v['S.codeOther']?' — '+esc(v['S.codeOther']):'')+' &nbsp; Advance directive / MPOA '+pc('S.mpoa',['Y','N'])+'</div>')+cell('Isolation','','<div>'+pc('S.iso',['Standard','Contact','C. diff / Enteric','Droplet','Airborne'])+'</div>'),
+    cell('Allergies + reaction','',pt(allergies),2),
+    cell('Current condition','','<div>'+pc('S.cond',['Stable','Needs watching','Unstable'])+'</div>'+pv('S.condWhy'),2),
+    cell('Immediate concern','',pv('S.concern'),2)]);
+  h+=secH('B','BACKGROUND')+skipRow('B');
+  if(!S.skips.B){const labs=[1,2,3].filter(n=>v['B.lab'+n]).map(n=>v['B.lab'+n]+' '+(v['B.lab'+n+'v']||'')+' ('+(v['B.lab'+n+'f']||'—')+', '+(v['B.lab'+n+'t']||'—')+')').join(' · ');
+    h+=tbl(2,[cell('Reason for rehab','',pt(v['B.dxCat']))+cell('Exact diagnosis','',pv('B.dx')),
+    cell('Relevant history','',pt((v['B.hx']||[]).join(', '))+(v['B.hxImpact']?'<div class="pv">Changes today’s care: '+esc(v['B.hxImpact'])+'</div>':''),2),
+    cell('Baseline status','before this illness','<div>Cognition: '+pc('B.cog',['Intact','Mild impairment','Dementia','Unknown'])+' &nbsp; Function: '+pc('B.func',['Independent','Needed assist','Dependent'])+'</div><div>Lived: '+pc('B.lived',['Alone','With family','ALF / LTC'])+' &nbsp; Aids: '+pc('B.aids',['Glasses','Hearing aids','Dentures','Interpreter needed'])+'</div>',2),
+    cell('Recent events','',pt((v['B.recent']||[]).join(', ')+(v['B.recentD']?' — '+v['B.recentD']:'')))+cell('Treatments & therapy','',pt((v['B.tx']||[]).join(', '))),
+    cell('Important results','',pt(labs),2)]);}
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('A','ASSESSMENT','Abnormal findings are in bold with the student’s description and comparison with baseline.');
+  if(S.skips['A.vs'])h+=skipRow('A.vs');else{const vt=vsTriggers(aVS());
+    h+=tbl(6,[cell('BP','',pv('A.bp'))+cell('HR','',pv('A.hr'))+cell('RR','',pv('A.rr'))+cell('SpO₂','',pt((v['A.spo2']||'')+(v['A.spo2']?'% ':'')+(v['A.o2']||'')+(v['A.o2L']?' '+v['A.o2L']+' L':'')))+cell('Temp / route','',pt((v['A.temp']||'')+' '+(v['A.troute']||'')))+cell('BG','',pv('A.bg')),
+      cell('Compared with last set in chart','',pt((v['A.trend']||'')+(v['A.trendWhich']?' — '+v['A.trendWhich']:''))+(vt.length?'<div class="trig">Outside notify parameters: '+esc(vt.join(', '))+'</div>':''),6)]);}
+  h+=tbl(3,SYS.map(s=>sysPrint(s)));
+  h+=tbl(1,[cell('Change from baseline','This is your most important finding.',pv('A.change')),cell('Safety risks','','<div>'+pc('A.safety',SAFETY)+'</div>')]);
+  const it=immediateTriggers();if(it.length)h+=tbl(1,[cell('<span class="trig">Notify-immediately triggers found</span>','',' '+esc(it.join(' · '))+' — instructor told at '+esc(v['R.instT']||'____')+', primary nurse at '+esc(v['R.rnT']||'____'))]);
+  h+=secH('★','CLINICAL REASONING MOMENT · CJMM: Recognize Cues → Analyze Cues','From verbal report only — before you open the chart.')+skipRow('CR');
+  if(!S.skips.CR)h+=tbl(1,[cell('Q1 Recognize Cues','',pv('CR.q1')),cell('Q2 Verify in the chart','','<div class="pv">1. '+esc(v['CR.q2a']||'')+'</div><div class="pv">2. '+esc(v['CR.q2b']||'')+'</div>'),cell('Q3 Analyze Cues','How sick? '+pc('CR.sick',['Stable','Needs watching','Getting worse']),pv('CR.q3')+(v['CR.priority']?'<div class="pv"><b>Most urgent:</b> '+esc(v['CR.priority'])+'</div>':''))]);
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('Rx','MEDICATION PREP · Maximum 2 medications',medsRequired()?'Required this week (Medication 1).':'Optional until Week 4.')+skipRow('Rx');
+  if(!S.skips.Rx)h+=medPrint(1)+medPrint(2);
+  h+=secH('R','RECOMMENDATION','You request — your instructor and the primary nurse act.')+skipRow('R');
+  if(!S.skips.R)h+=tbl(2,[cell('I am requesting','','<div>'+pc('R.type',['Action','Clarification','Assessment','Order (instructor relays to primary nurse)','Support / supervision'])+'</div>',2),
+    cell('My specific request','',pt('I am requesting '+(v['R.what']||'____')+' for '+(v['R.for']||'____')+' by '+(v['R.by']||'____')+'.'),2),
+    cell('Because','',pt((v['R.cues']||[]).join('; '))+pv('R.because'))+cell('Follow-up','reassess at '+esc(v['R.followTime']||'____')+' — logged as a round',pv('R.follow')),
+    cell('Closed loop:','',' '+pc('R.loop',['Instructor read back my request','Plan confirmed','Primary nurse informed'])+' &nbsp;&nbsp; Instructor initials ______',2)]);
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('N','NURSE’S NOTES · ROUNDING LOG &nbsp;<span style="color:#000;font-size:8pt">q2h rounding · Focus charting (DAR) · Timby Ch. 9</span>','Times are military. Late entries and corrections are labeled automatically; struck-through text is the original entry.');
+  ROUNDS.forEach(t=>h+=roundPrint(t));
+  h+=secH('✓','END OF SHIFT · DISPOSITION + HANDOFF')+skipRow('E');
+  if(!S.skips.E)h+=tbl(2,[cell('Disposition at end of shift','',pt((v['E.loc']||'—')+' · compared with baseline: '+(v['E.base']||'—'))+pv('E.disp'),2),
+    cell('Handoff to primary nurse','',' '+pc('E.hand',['Given','Not given'])+' at '+esc(v['E.handTime']||'____')+pv('E.handKey'))+cell('CJMM Evaluate Outcomes','',pv('E.cjmm')),
+    cell('Rounds:','',' '+ROUNDS.map(t=>(S.rounds[t].status==='saved'?'☒ ':(skipped('round.'+t)?'⊘ ':'☐ '))+t).join('&nbsp; ')+' &nbsp; (⊘ = skipped with permission) &nbsp;&nbsp; <b>Student signature, SVN</b> '+esc((v['meta.student']||'')+', SVN')+' &nbsp;&nbsp; <b>Instructor initials</b> ______',2)]);
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('J','REFLECTION JOURNAL &nbsp;<span style="color:#000;font-size:8pt">Gibbs Reflective Cycle · your day, in your own words</span>')+skipRow('J');
+  if(!S.skips.J)h+=tbl(2,[cell('1 What happened today','',pv('J.what'),2),
+    cell('2 How I felt','','<div>Start of shift: '+pc('J.feelS',FEEL_S)+'</div><div>End of shift: '+pc('J.feelE',FEEL_E)+'</div>'+pv('J.feelWhy'),2),
+    cell('3 What went well','',pv('J.well'))+cell('3 What was hard','',pv('J.hard')),
+    cell('4 Why it went that way','',pv('J.why'),2),cell('5 What I learned','',pv('J.learned'),2),cell('6 My plan for next clinical day','',pv('J.plan'),2)]);
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('⏱','APPENDIX · ENTRY-TIME LOG AND SKIPS','Recorded automatically by the tool. Times only; no dates are stored.');
+  h+='<table class="pt"><tr><td class="gr pl">Round</td><td class="gr pl">Round time stated</td><td class="gr pl">Charted at</td><td class="gr pl">Late entry</td><td class="gr pl">Corrections</td><td class="gr pl">Notify</td></tr>'+
+    ROUNDS.map(t=>{const r=S.rounds[t];if(r.status==='saved'){const s=r.saved;return '<tr><td>'+t+'</td><td>'+esc(s.time)+'</td><td>'+esc(s.savedAt)+'</td><td>'+(s.late?'<span class="late">Yes — '+esc(s.late)+'</span>':'No')+'</td><td>'+r.history.length+'</td><td>'+(s.notify==='Yes'?'Instructor '+esc(s.instT||'—')+' · RN '+esc(s.rnT||'—'):'—')+'</td></tr>';}
+      const sk=S.skips['round.'+t];return '<tr><td>'+t+'</td><td colspan="5">'+(sk?'<span class="skp">Skipped with permission</span> — '+esc(sk.initials)+' at '+esc(sk.at)+': '+esc(sk.reason):'Not charted')+'</td></tr>';}).join('')+'</table>';
+  const sk=Object.values(S.skips);
+  h+='<table class="pt"><tr><td class="gr pl">Area skipped</td><td class="gr pl">Instructor</td><td class="gr pl">Time</td><td class="gr pl">Reason</td></tr>'+(sk.length?sk.map(s=>'<tr><td>'+esc(s.label)+'</td><td>'+esc(s.initials)+'</td><td>'+esc(s.at)+'</td><td>'+esc(s.reason)+'</td></tr>').join(''):'<tr><td colspan="4">No areas skipped.</td></tr>')+'</table>';
+  h+='<table class="pt"><tr><td class="gr pl" style="width:16%">Time</td><td class="gr pl">Activity</td></tr>'+S.log.map(l=>'<tr><td>'+esc(l.at)+'</td><td>'+esc(l.what)+'</td></tr>').join('')+'</table>';
+  h+='<table class="pt avoid"><tr><td><b>Attestation.</b> I attest these entries reflect care I provided and observations I made during this clinical shift.<div class="pv">'+esc(S.attest.name)+', SVN · PDF saved at '+nowHHMM()+'</div></td></tr></table>';
+  h+='<div class="pnote">This PDF was created offline on the student’s device. No data was sent to any server or AI service. Instructor initials on skips are typed on the student’s device; verify against your own notes.</div>'+FOOT+'</div>';
+  document.getElementById('print').innerHTML=h;
+}
+window.addEventListener('beforeprint',buildPrint);
+
+/* ---------- shell ---------- */
+function secStatus(id){
+  const L=reqs().filter(x=>x.sec===id);
+  if(id==='A'&&immediateTriggers().length)return 'al';
+  if(id==='N'&&ROUNDS.some(t=>roundOpen(t)&&nowMin()-toMin(t)>=0))return 'al';
+  if(S.skips[id])return 'ok';
+  if(!L.length)return '';return L.every(x=>x.ok)?'ok':'';
+}
+function renderTabs(){
+  const n=$('#tabs');n.innerHTML='';
+  SECTIONS.forEach(s=>{const b=el('button',null,'<span class="l">'+esc(s.L)+'</span>'+esc(s.short)+'<span class="dot '+secStatus(s.id)+'"></span>');b.type='button';if(S.view===s.id)b.setAttribute('aria-current','true');b.onclick=()=>{S.view=s.id;save();rerender();window.scrollTo({top:0});};n.appendChild(b);});
+  const cur=n.querySelector('[aria-current="true"]');if(cur)cur.scrollIntoView({inline:'nearest',block:'nearest'});
+}
+function renderBand(){
+  const v=V();const b=$('#band');b.innerHTML='';const add=(t,w)=>b.appendChild(el('span','tag'+(w?' warn':''),esc(t)));
+  if(v['meta.age']||v['meta.sex'])add([v['meta.age'],v['meta.sex']].filter(Boolean).join(' · '));
+  if(v['S.code'])add('Code: '+v['S.code'],v['S.code']!=='Full');
+  const iso=(v['S.iso']||[]).filter(x=>x!=='Standard');if(iso.length)add('Isolation: '+iso.join(', '),true);
+  if(v['S.nkda'])add('NKDA');else{const al=[1,2,3].map(n=>v['S.al'+n]).filter(x=>len(x));if(al.length)add('Allergies: '+al.join(', '),true);}
+  if(v['A.gi.liquids']&&v['A.gi.liquids']!=='Thin')add('Liquids: '+v['A.gi.liquids'],true);
+  if(v['A.mob.prec']&&v['A.mob.prec']!=='None')add(v['A.mob.prec']+' precautions',true);
+  const fr=(v['A.safety']||[]).filter(x=>['Falls','Aspiration','Bleeding (anticoagulant)'].includes(x));if(fr.length)add(fr.join(' · ')+' risk',true);
+}
+function dueItems(){
+  const it=[];const v=V();
+  ROUNDS.forEach(t=>{const r=S.rounds[t];it.push({t,label:t+' round',short:'Round',st:r.status==='saved'?(r.saved.late?'late':'saved'):(skipped('round.'+t)?'missed':'open'),sub:r.status==='saved'?'charted '+r.saved.savedAt:(skipped('round.'+t)?'skipped with permission':'')});});
+  const linked=x=>ROUNDS.some(t=>S.rounds[t].status==='saved'&&(S.rounds[t].saved.linked||[]).includes(x));
+  if(toMin(v['R.followTime'])!=null)it.push({t:v['R.followTime'],label:'R follow-up',st:linked('My R follow-up')?'saved':'open',sub:'from your Recommendation'});
+  [1,2].forEach(n=>{const k='M'+n+'.evalTime';if(toMin(v[k])!=null)it.push({t:v[k],label:'Med '+n+' response',st:linked('Med response')?'saved':'open',sub:(v['M'+n+'.name']||'Medication '+n)});});
+  return it.sort((a,b)=>toMin(a.t)-toMin(b.t));
+}
+function renderRail(){
+  const now=nowMin();
+  const items=dueItems().map(i=>{let cls=i.st;if(i.st==='open')cls=now>=toMin(i.t)?'over':'due';return {m:toMin(i.t),h:'<li class="'+cls+'"><span class="t num">'+esc(i.t)+'</span> '+esc(i.short||i.label)+(i.sub?'<span class="s">'+esc(i.sub)+'</span>':'')+'</li>'};});
+  const all=items.concat({m:now,h:'<li class="now"><span class="t num">'+nowHHMM()+'</span> now</li>'}).sort((a,b)=>a.m-b.m).map(x=>x.h).join('');
+  $('#rail').innerHTML=all;const mr=document.getElementById('mrail');if(mr)mr.innerHTML=all;
+}
+function renderNext(){
+  const now=nowMin();const open=dueItems().filter(i=>i.st==='open');const n=$('#next');
+  if(!open.length){n.className='next done num';n.textContent='All rounds done';return;}
+  const i=open[0];const d=now-toMin(i.t);n.className='next num'+(d>=0?' over':'');
+  n.textContent=d>=0?i.label+' due — '+(d?fmtDiff(d)+' overdue':'now'):'Next: '+i.label+' in '+fmtDiff(d);
+  if(d>=0&&!S.notified[i.label]){S.notified[i.label]=1;save();try{if('Notification' in window&&Notification.permission==='granted')new Notification('Charting tool',{body:i.label+' is due.'});}catch(e){}}
+}
+function refreshLive(){
+  const a=document.querySelector('[data-live="vsA"]');
+  if(a){const t=immediateTriggers();a.innerHTML=t.length?'<div class="alert"><b>Notify your instructor AND the primary nurse immediately: '+esc(t.join(' · '))+'.</b>Unless facility or order parameters differ. Record the times on the Recommendation tab.</div>':'';}
+  const w=document.querySelector('[data-live="weekrules"]');
+  if(w){const k=week();w.innerHTML=k?'<b>Week '+k+' requirements.</b> '+(k>=3?'All assessment systems required; D-A-R and reflection boxes at least 40 characters.':'Neuro, Respiratory, GI/Swallow, Skin, Mobility, and Pain required; Cardio and GU optional; one clear sentence per box.')+' '+(k>=4?'Medication Prep (Medication 1) is required.':'Medication Prep is optional until Week 4.'):'Choose your clinical week to see what is required.';}
+  drawNewList();drawDetected();renderBand();renderRail();renderNext();
+  document.querySelectorAll('#tabs .dot').forEach((d,i)=>{d.className='dot '+secStatus(SECTIONS[i].id);});
+}
+function rerender(){
+  const m=$('#main');m.innerHTML='';const s=SECTIONS.find(x=>x.id===S.view)||SECTIONS[0];
+  const sec=el('section','sec on');
+  sec.appendChild(el('div','sec-h','<span class="L">'+esc(s.L)+'</span><h2>'+esc(s.title)+'</h2>'));
+  sec.appendChild(el('p','sec-sub',esc(s.sub)));
+  if(s.id==='setup'||s.id==='N'){const mr=el('div','mobile-rail card');mr.appendChild(el('h3',null,'Shift timeline'));const ol=el('ol','shift');ol.id='mrail';mr.appendChild(ol);sec.appendChild(mr);}
+  if(s.skip)sec.appendChild(skipControl(s.skip,s.title,()=>rerender()));
+  if(!(s.skip&&skipped(s.skip))){
+    if(s.fields)renderFields(s.fields,sec);
+    if(s.custom==='assess')renderAssess(sec);
+    if(s.custom==='rounds')renderRounds(sec);
+    if(s.custom==='end')renderEnd(sec);
+    if(s.custom==='export')renderExport(sec);
+  }
+  if(s.id==='setup'&&'Notification' in window){
+    const c=el('div','card');c.appendChild(el('h3',null,'Round reminders'));c.appendChild(el('p',null,'The timeline and the bar at the top always show your next round. You can also allow a pop-up reminder while this tab is open. Follow your facility’s rules for phones in patient areas.'));
+    const b=el('button','btn sm',Notification.permission==='granted'?'Reminders on':'Turn on reminders');b.type='button';b.disabled=Notification.permission!=='default';
+    b.onclick=()=>{try{Notification.requestPermission().then(p=>{b.textContent=p==='granted'?'Reminders on':'Reminders blocked in this browser';b.disabled=true;});}catch(e){b.textContent='Not available in this browser';b.disabled=true;}};
+    c.appendChild(b);sec.appendChild(c);
+  }
+  const i=SECTIONS.indexOf(s);const nav=el('div','row');nav.style.marginTop='18px';
+  if(i>0){const p=el('button','btn','Back: '+SECTIONS[i-1].short);p.type='button';p.onclick=()=>{S.view=SECTIONS[i-1].id;save();rerender();window.scrollTo({top:0});};nav.appendChild(p);}
+  if(i<SECTIONS.length-1){const q=el('button','btn pri','Next: '+SECTIONS[i+1].short);q.type='button';q.onclick=()=>{S.view=SECTIONS[i+1].id;save();rerender();window.scrollTo({top:0});};nav.appendChild(q);}
+  sec.appendChild(nav);m.appendChild(sec);renderTabs();refreshLive();
+}
+load();rerender();
+setInterval(()=>{renderRail();renderNext();if(S.view==='N')document.querySelectorAll('.round').forEach(c=>{const t=c.id.slice(6);const p=c.querySelector('.pill');if(p&&roundOpen(t)){const st=roundStatus(t);p.className='pill '+st.cls;p.textContent=st.txt;}});},30000);
+
+</script>
+</body>
+</html>
