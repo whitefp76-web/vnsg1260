@@ -1,6 +1,6 @@
 /* Offline asset cache only. Does not inspect, transmit, or store charting entries.
    Charting data lives in the app's localStorage and is never touched here. */
-const CACHE_NAME = 'vnsg1260-clinical-charting-v3';
+const CACHE_NAME = 'vnsg1260-clinical-charting-v4';
 const CORE = [
   './', './index.html', './app.html', './install.js', './manifest.webmanifest',
   './icons/favicon.ico', './icons/icon-32.png', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
