@@ -6,7 +6,7 @@
 <title>VNSG 1260 Clinical Charting Tool</title>
 <!--
   VNSG 1260 Clinical I · SBAR Clinical Report Sheet, Nurse's Notes, and Reflection Journal
-  Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · v2
+  Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.20.2026 · v4.1 (end-of-shift SBAR)
   Self-contained: no internet, no login, no AI, no server. All data stays in this browser on this device.
 -->
 <style>
@@ -234,6 +234,7 @@ details.tip p{margin:4px 0 0}
 .frame{display:grid;gap:8px}
 @media (min-width:700px){.frame{grid-template-columns:auto 1fr auto 1fr auto 140px;align-items:center}}
 .frame span{font-weight:650}
+.rframe{display:grid;gap:6px;margin-top:8px} @media (min-width:700px){.rframe{grid-template-columns:150px 1fr;align-items:start}.rframe>span{padding-top:9px}} .rframe>span{font-weight:650} .cues{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .cue{border:1px solid var(--line-strong);border-radius:12px;padding:2px 9px;font-size:13px;background:#fff;color:#1d2939} .reco h3{margin-bottom:2px}
 .lab3{display:grid;gap:8px;grid-template-columns:1.2fr 1fr 1fr .8fr;align-items:end}
 .lab3 .h{font-size:12px;color:var(--muted)}
 .rcheck{border:1px solid var(--line);border-radius:5px;padding:8px 10px;margin:0 0 8px}
@@ -272,14 +273,14 @@ details.tip p{margin:4px 0 0}
   <aside class="rail" aria-label="Shift timeline"><h3>Shift timeline</h3><ol class="shift" id="rail"></ol></aside>
   <main id="main"></main>
 </div>
-<footer class="f">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · Works offline. No login, no AI, no server. Your work stays in this browser on this device until you clear it.</footer>
+<footer class="f">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.20.2026 · v4.1 · Works offline. No login, no AI, no server. Your work stays in this browser on this device until you clear it.</footer>
 <div id="print" aria-hidden="true"></div>
 
 <script>
 "use strict";
-/* VNSG 1260 Clinical Charting Tool v2 — The AI Nurse Professor™ · Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026
+/* VNSG 1260 Clinical Charting Tool v4 — The AI Nurse Professor™ · Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026
    Fixed rules only. No AI, no network, no server. */
-const VERSION='11.06.2026 v2';
+const VERSION='11.20.2026 v4.1';
 const KEY='vnsg1260_charting_v2';
 const ROUNDS=['0800','1000','1200','1400','1600'];
 const ROUND_CHECKS=['Repositioned (within precautions)','Toileting / incontinence care','Fluids per diet order','Call light + items in reach','Bed low + locked','Alarm on'];
@@ -296,7 +297,7 @@ const DX=['Hip or knee fracture / replacement','Stroke (CVA)','Cardiac','Pulmona
 const HX=['Hypertension','Diabetes','Heart failure','COPD','Kidney disease','Atrial fibrillation','Dementia','Parkinson’s','Depression','Other'];
 const RECENT=['Fall','New symptom','New or changed order','Procedure','Family concern'];
 const TX=['PT','OT','SLP','Oxygen','Foley catheter','Wound care','IV / PICC','CPAP / BiPAP','Feeding tube'];
-const LABS=['K⁺','Na⁺','BUN','Creatinine','Hgb','WBC','INR','Glucose','Other'];
+const LABS=['K⁺','Na⁺','Mg²⁺','BUN','Creatinine','Hgb','Platelets','WBC','INR','Glucose','Albumin','Other'];
 const REACT=['Rash or hives','Swelling','Trouble breathing','Stomach upset','Unknown'];
 const PRECHECK=['Apical pulse','Blood pressure','Blood glucose','Potassium','INR','Respiratory rate + sedation level','Pain score','Swallow ability','None required'];
 
@@ -341,7 +342,8 @@ const SYS=[
   {k:'device',l:'Device',o:[['None',2],['Walker',2],['Cane',2],['Wheelchair',2],['Mechanical lift',2]]},
   {k:'wb',l:'Weight-bearing',o:[['No restriction',2],['Full (FWB)',2],['As tolerated (WBAT)',2],['Partial (PWB)',2],['Toe-touch (TTWB)',2],['Non-weight-bearing (NWB)',2]]},
   {k:'prec',l:'Precautions',o:[['None',2],['Posterior hip',2],['Anterior hip',2],['Spinal',2],['Sternal',2]],tip:'Know the exact precautions before you reposition or move your patient. Ask the primary nurse or PT if you are not sure.'},
-  {k:'belt',l:'Gait belt used',o:[['Yes',0],['No',1],['Patient did not move',2]]}]},
+  {k:'belt',l:'Gait belt used',o:[['Yes',0],['No',1],['Patient did not move',2]]},
+  {k:'fall',l:'Fall-risk level (from chart)',s:'Morse Fall Scale or the facility’s tool',o:[['Low risk',2],['Moderate risk',2],['High risk',2],['Not scored in the chart',1]],tip:'Record the risk level the facility’s tool assigns, using the facility’s cutoffs. Write the score in your report (for example, “Morse 55, high risk”). A fall-precautions recommendation should rest on this score plus what you saw: device, assist level, dizziness, confusion, or getting up alone.'}]},
  {id:'pain',t:'Pain',core:true,f:[
   {k:'scale',l:'Scale used',o:[['0–10',2],['PAINAD',2],['Faces',2]],tip:'Timby Ch. 20: older adults with cognitive impairment may not be able to report pain; changes in behavior, restlessness, agitation, or a faster pulse and breathing may be the main clues. Use the behavior-based scale your facility uses (such as PAINAD) when your patient cannot give a number.'},
   {k:'score',l:'Score',tip:'A score of 4 or higher asks you to describe it. Ask your patient what pain level lets them rest and move. Their goal may differ from the number.',o:[['0',0],['1',0],['2',0],['3',0],['4',1],['5',1],['6',1],['7',1],['8',1],['9',1],['10',1]]},
@@ -355,7 +357,7 @@ function blankRounds(){const r={};ROUNDS.forEach(t=>r[t]={status:'open',draft:{}
 function blank(){return {v:{},rounds:blankRounds(),log:[],skips:{},attest:{ok:false,name:''},view:'setup',notified:{},expand:{}};}
 let S=blank();
 function load(){
-  try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);S=Object.assign(blank(),o);ROUNDS.forEach(t=>{if(!S.rounds[t])S.rounds[t]={status:'open',draft:{},saved:null,history:[]};});}}catch(e){storageOK=false;}
+  try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);S=Object.assign(blank(),o);ROUNDS.forEach(t=>{if(!S.rounds[t])S.rounds[t]={status:'open',draft:{},saved:null,history:[]};});if(S.view==='E')S.view='R';}}catch(e){storageOK=false;}
   try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){storageOK=false;}
   if(!storageOK)document.getElementById('storageWarn').style.display='block';
 }
@@ -417,9 +419,14 @@ function vsTriggers(o){
   const hr=num(o.hr);if(hr!=null){if(hr<50)t.push('HR '+hr+' (< 50)');if(hr>120)t.push('HR '+hr+' (> 120)');}
   const sp=num(o.spo2);if(sp!=null&&sp<90)t.push('SpO₂ '+sp+'% (< 90%)');
   const bg=num(o.bg);if(bg!=null){if(bg<70)t.push('BG '+bg+' (< 70)');if(bg>300)t.push('BG '+bg+' (> 300)');}
+  const rr=num(o.rr);if(rr!=null){if(rr<10)t.push('RR '+rr+' (< 10)');if(rr>24)t.push('RR '+rr+' (> 24)');}
+  const tp=num(o.temp);if(tp!=null&&tp>=100.4&&tp<115)t.push('Temp '+tp+'°F (≥ 100.4)');
   return t;
 }
-function aVS(){const v=V();return {bp:v['A.bp'],hr:v['A.hr'],spo2:v['A.spo2'],bg:v['A.bg']};}
+function aVS(){const v=V();return {bp:v['A.bp'],hr:v['A.hr'],rr:v['A.rr'],temp:v['A.temp'],spo2:v['A.spo2'],bg:v['A.bg']};}
+function aVS2(){const v=V();return {bp:v['A2.bp'],hr:v['A2.hr'],rr:v['A2.rr'],temp:v['A2.temp'],spo2:v['A2.spo2'],bg:v['A2.bg']};}
+/* last vital signs charted on a saved round (newest round time first) */
+function lastRoundVS(){const L=ROUNDS.map(t=>S.rounds[t].saved).filter(s=>s&&(s.bp||s.hr||s.rr||s.spo2||s.temp)).sort((a,b)=>toMin(b.time)-toMin(a.time));return L[0]||null;}
 
 /* ---------- assessment logic ---------- */
 function fk(s,f){return 'A.'+s.id+'.'+f.k;}
@@ -428,7 +435,7 @@ function isAbn(s,f){return optFlag(f,V()[fk(s,f)])===1;}
 function abnList(){const L=[];SYS.forEach(s=>{if(S.skips['A.'+s.id])return;s.f.forEach(f=>{if(isAbn(s,f))L.push({s,f,val:V()[fk(s,f)],isNew:V()[fk(s,f)+'.new']==='New today'||autoNew(s,f),d:V()[fk(s,f)+'.d']||''});});});return L;}
 function autoNew(s,f){return s.id==='neuro'&&f.k==='orient'&&V()['B.cog']==='Intact'&&isAbn(s,f)&&V()[fk(s,f)]!=='Unable to assess';}
 function immediateTriggers(){
-  const v=V();const t=vsTriggers(aVS());
+  const v=V();const t=vsTriggers(aVS());vsTriggers(aVS2()).forEach(x=>t.push('Last set: '+x));
   const nv=(id,k)=>v['A.'+id+'.'+k];const isNew=(id,k)=>nv(id,k+'.new')==='New today';
   const neuro=SYS[0];
   if(autoNew(neuro,neuro.f[1]))t.push('New confusion (baseline cognition intact)');
@@ -540,27 +547,179 @@ function allergyBlock(){
     w.appendChild(box);};
   draw();return w;
 }
-function labsBlock(){
-  const w=el('div','field');w.appendChild(el('div','lab','Important results<span class="h">up to 3 from the chart: value, high/low/normal flag, and trend</span>'));
-  [1,2,3].forEach(n=>{const k='B.lab'+n;const r=el('div','lab3');r.style.marginBottom='8px';
-    const v=el('input');v.type='text';v.placeholder='Value';v.value=V()[k+'v']||'';v.addEventListener('input',()=>setV(k+'v',v.value));
-    r.append(selectEl(LABS,V()[k],x=>setV(k,x)),v,selectEl(['High','Low','Normal'],V()[k+'f'],x=>setV(k+'f',x)),selectEl(['↑ rising','↓ falling','→ steady','First value'],V()[k+'t'],x=>setV(k+'t',x)));w.appendChild(r);});
-  return w;
+/* ---------- labs (moved to Assessment in v4) ---------- */
+function labName(n){const v=V();const k='B.lab'+n;return v[k]==='Other'?(len(v[k+'o'])?v[k+'o']:'Other (not named)'):v[k];}
+/* keys stay B.labN* so entries made before the update are kept */
+function labsDone(){
+  if(skipped('A.labs'))return true;const v=V();
+  if(v['A.labsNone'])return len(v['A.labsNoneWhy'])>=5;
+  const f=[1,2,3].filter(n=>v['B.lab'+n]);if(!f.length)return false;
+  return f.every(n=>len(v['B.lab'+n+'v'])&&!!v['B.lab'+n+'f']&&len(v['B.lab'+n+'m'])>=15&&(v['B.lab'+n]!=='Other'||len(v['B.lab'+n+'o'])>=2));
 }
-function requestFrame(){
-  const w=el('div','field');w.appendChild(el('div','lab','My specific request<span class="h">fill in the three blanks</span>'));
-  const fr=el('div','frame');const mk=(k,ph)=>{const i=el('input');i.type='text';i.placeholder=ph;i.value=V()[k]||'';i.addEventListener('input',()=>setV(k,i.value));return i;};
-  fr.append(el('span',null,'I am requesting'),mk('R.what','what (e.g., a recheck of BP)'),el('span',null,'for'),mk('R.for','which finding'),el('span',null,'by'),mk('R.by','when (e.g., 1000)'));
-  w.appendChild(fr);return w;
+function labsCard(){
+  const c=el('div','sys');c.id='sys_labs';const h=el('div','sh');h.appendChild(el('h3',null,'Lab values — and what they mean for my patient'));h.appendChild(el('span','req'+(labsDone()?' done':''),labsDone()?'Complete':'Required'));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.labs','Lab values',()=>replaceCard(c,labsCard)));
+  if(skipped('A.labs'))return c;
+  const v=V();const upd=()=>{const r=c.querySelector('.req');if(r){r.className='req'+(labsDone()?' done':'');r.textContent=labsDone()?'Complete':'Required';}};
+  b.appendChild(el('div','info','<b>Up to 3 results from the chart.</b> Choose the ones that matter most for this patient. For each one, say what it means for <i>this</i> patient and what you would watch or report. You are not diagnosing; you are connecting the number to your patient.'));
+  b.appendChild(chipGroup(['No lab results in the chart for this patient'],()=>v['A.labsNone']?'No lab results in the chart for this patient':'',x=>{setV('A.labsNone',!!x);replaceCard(c,labsCard);},false));
+  if(v['A.labsNone']){const i=el('input');i.type='text';i.value=v['A.labsNoneWhy']||'';i.placeholder='e.g., no labs drawn since admission; next draw ordered for tomorrow AM';i.addEventListener('input',()=>{setV('A.labsNoneWhy',i.value);upd();});b.appendChild(fld('Where did you look?',null,i));return c;}
+  const inp=(k,ph,area)=>{const i=area?el('textarea'):el('input');if(area)i.rows=2;else i.type='text';i.value=v[k]||'';i.placeholder=ph;i.addEventListener('input',()=>{setV(k,i.value);upd();});return i;};
+  [1,2,3].forEach(n=>{const k='B.lab'+n;const card=el('div','card');card.appendChild(el('h3',null,'Lab '+n+(n>1?' (optional)':'')));
+    const g=el('div','grid g3');
+    g.append(fld('Test',null,selectEl(LABS,v[k],x=>{setV(k,x);replaceCard(c,labsCard);})),fld('My patient’s value',null,inp(k+'v','e.g., 3.2')),fld('Normal range','from the lab report or your reference',inp(k+'r','e.g., 3.5–5.0')));
+    const g2=el('div','grid g2');
+    g2.append(fld('Compared with normal',null,selectEl(['High','Low','Normal'],v[k+'f'],x=>{setV(k+'f',x);upd();})),fld('Trend',null,selectEl(['↑ rising','↓ falling','→ steady','First value'],v[k+'t'],x=>{setV(k+'t',x);upd();})));
+    const m=inp(k+'m','e.g., Low K⁺ and my patient takes furosemide. I would watch for weakness, leg cramps, and an irregular pulse, and report them.',true);
+    let lb=lintBox(m.value);m.addEventListener('input',()=>{const x=lintBox(m.value);m.parentNode.replaceChild(x,lb);lb=x;});
+    const mf=fld('What it means for my patient · what I would watch or report',null,m);mf.appendChild(lb);
+    card.append(g);
+    if(v[k]==='Other')card.appendChild(fld('Name of the test',null,inp(k+'o','e.g., BNP, calcium, PT/aPTT, culture')));
+    card.append(g2,mf);b.appendChild(card);});
+  b.appendChild(el('details','tip','<summary>How do I write this?</summary><p>Use three parts: the value compared with normal, the link to your patient (diagnosis, medication, or symptom), and what you would watch or report. Example: “Hgb 8.9, low and falling. My patient is on apixaban after hip surgery. I would watch for dizziness when standing, a faster pulse, and drainage on the dressing, and report them to the primary nurse.”</p>'));
+  return c;
 }
-function becauseBlock(){
-  const w=el('div','field');w.appendChild(el('div','lab','Because<span class="h">pick the cue from S, B, or A, then explain the connection</span>'));
-  const cues=abnList().map(a=>a.s.t+': '+a.val).concat(immediateTriggers()).concat(V()['S.cond']&&V()['S.cond']!=='Stable'?['Condition rated '+V()['S.cond'].toLowerCase()]:[]);
-  const uniq=Array.from(new Set(cues));
-  if(uniq.length)w.appendChild(chipGroup(uniq,()=>V()['R.cues'],x=>setV('R.cues',x),true));
-  else w.appendChild(el('div','info','Cues you mark abnormal on the Assessment tab will appear here to choose from.'));
-  const t=el('textarea');t.rows=2;t.placeholder='This finding matters because …';t.value=V()['R.because']||'';const lb=lintBox(t.value);
-  t.addEventListener('input',()=>setV('R.because',t.value));t.style.marginTop='8px';w.append(t,lb);return w;
+
+/* ---------- medications given this shift (v4) ---------- */
+function haDone(){const v=V();if(skipped('A.meds'))return true;return v['A.ha']==='No'||(v['A.ha']==='Yes'&&len(v['A.haWhich'])>=15);}
+function medsGivenDone(){
+  if(skipped('A.meds'))return true;const v=V();let ok=true;
+  [1,2].forEach(n=>{const p='M'+n+'.';if(!len(v[p+'name']))return;
+    if(v[p+'decision']==='Give')ok=ok&&toMin(v[p+'givenT'])!=null&&len(v[p+'resp'])>=10;
+    else if(v[p+'decision']==='Hold + notify instructor')ok=ok&&len(v[p+'holdWhy'])>=5;});
+  return ok;
+}
+function medsGivenCard(){
+  const c=el('div','sys');c.id='sys_meds';const h=el('div','sh');h.appendChild(el('h3',null,'Medications given this shift'));
+  const any=[1,2].some(n=>len(V()['M'+n+'.name']));
+  const pill=()=>(medsGivenDone()&&haDone())?(any?'Complete':(medsRequired()?'Complete Med Prep first':'Optional until Week 4')):'Required';
+  h.appendChild(el('span','req'+((medsGivenDone()&&haDone())&&any?' done':((medsGivenDone()&&haDone())?' opt':'')),pill()));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.meds','Medications given',()=>replaceCard(c,medsGivenCard)));
+  if(skipped('A.meds'))return c;
+  const v=V();const upd=()=>{const r=c.querySelector('.req');const d=(medsGivenDone()&&haDone());if(r){r.className='req'+(d&&any?' done':(d?' opt':''));r.textContent=pill();}};
+  if(!any)b.appendChild(el('div','info','The medications you prepare on the <b>Meds</b> tab appear here. After you give one, come back and record the time and how your patient responded.'));
+  [1,2].forEach(n=>{const p='M'+n+'.';if(!len(v[p+'name']))return;
+    const card=el('div','card');card.appendChild(el('h3',null,esc(v[p+'name'])+(v[p+'dose']?' · '+esc(v[p+'dose']):'')));
+    card.appendChild(el('div','h','Your decision on the Meds tab: '+esc(v[p+'decision']||'not chosen yet')));
+    if(v[p+'decision']==='Give'){
+      const g=el('div','grid g2');const r=el('textarea');r.rows=2;r.value=v[p+'resp']||'';r.placeholder='e.g., pain 7 → 3 at 1030; patient walked to the bathroom with walker';
+      let lb=lintBox(r.value,'data');r.addEventListener('input',()=>{setV(p+'resp',r.value);const x=lintBox(r.value,'data');r.parentNode.replaceChild(x,lb);lb=x;upd();});
+      const rf=fld('How my patient responded','what you checked and when',r);rf.appendChild(lb);
+      g.append(fld('Time given','military time',timeIn(p+'givenT',null,upd)),rf);card.appendChild(g);
+    }else if(v[p+'decision']==='Hold + notify instructor'){
+      const i=el('input');i.type='text';i.value=v[p+'holdWhy']||'';i.placeholder='e.g., apical pulse 54; held and told instructor at 0845';i.addEventListener('input',()=>{setV(p+'holdWhy',i.value);upd();});card.appendChild(fld('Held — why, and who you told',null,i));
+    }
+    b.appendChild(card);});
+  const ha=el('div','card');ha.appendChild(el('h3',null,'High-alert medications'));
+  ha.appendChild(fieldEl({k:'A.ha',l:'Is my patient on an anticoagulant, insulin, or an opioid?',h:'check the MAR · required every shift',t:'radio',o:['Yes','No'],after:()=>replaceCard(c,medsGivenCard)}));
+  if(v['A.ha']==='Yes')ha.appendChild(fieldEl({k:'A.haWhich',l:'Which one, and what should the oncoming nurse watch for?',t:'area',rows:2,ph:'e.g., enoxaparin daily: watch the injection sites, the dressing, and the urine for bleeding; report a pulse rising or BP falling'}));
+  ha.appendChild(el('details','tip','<summary>Why these three?</summary><p>Anticoagulants, insulin, and opioids are on the Institute for Safe Medication Practices high-alert list. They cause the most serious harm when a dose is missed, doubled, or not monitored, and the risk is highest around a change of shift.</p>'));
+  b.appendChild(ha);
+  b.appendChild(fieldEl({k:'A.medsOther',l:'Other medications given today that matter for report',h:'optional · from the MAR, given by the primary nurse',t:'area',rows:2,ph:'e.g., furosemide 40 mg PO at 0900, given by the primary nurse'}));
+  return c;
+}
+
+/* ---------- end of shift: I&O, lines, drains, devices (v4.1, Timby Box 9-4) ---------- */
+const DEV={'Oxygen':'e.g., 2 L nasal cannula, SpO₂ 95%, tubing and humidifier checked','Foley catheter':'e.g., draining clear yellow urine, 350 mL emptied at 1500, bag below bladder, secured to thigh','IV / PICC':'e.g., right arm PICC, dressing dry and intact, NS at 75 mL/hr, about 400 mL left (RN manages; I monitored)','CPAP / BiPAP':'e.g., on at night only, mask and settings per order, skin under mask intact','Feeding tube':'e.g., formula and rate per order, HOB 30° or higher, site clean and dry','Wound care':'e.g., left hip dressing changed by RN at 1000, dry and intact at 1600'};
+function devList(){return (V()['B.tx']||[]).filter(x=>DEV[x]);}
+function ioDone(){
+  if(skipped('A.io'))return true;const v=V();
+  const io=v['A.ioNA']?len(v['A.ioNAwhy'])>=5:(len(v['A.in'])&&len(v['A.out']));
+  return !!io&&devList().every(d=>len(v['A.dev.'+d])>=10);
+}
+function ioCard(){
+  const c=el('div','sys');c.id='sys_io';const h=el('div','sh');h.appendChild(el('h3',null,'End of shift — intake, output, lines, and devices'));h.appendChild(el('span','req'+(ioDone()?' done':''),ioDone()?'Complete':'Required'));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.io','Intake, output, and devices',()=>replaceCard(c,ioCard)));
+  if(skipped('A.io'))return c;
+  const v=V();const upd=()=>{const r=c.querySelector('.req');if(r){r.className='req'+(ioDone()?' done':'');r.textContent=ioDone()?'Complete':'Required';}};
+  const inp=(k,ph)=>{const i=el('input');i.type='text';i.value=v[k]||'';i.placeholder=ph;i.addEventListener('input',()=>{setV(k,i.value);upd();});return i;};
+  b.appendChild(el('div','h','Timby Box 9-4: a change-of-shift report includes intake and output totals and the status of IV fluids, equipment, drains, and dressings. Complete this just before report.'));
+  b.appendChild(chipGroup(['I&O not measured for this patient'],()=>v['A.ioNA']?'I&O not measured for this patient':'',x=>{setV('A.ioNA',!!x);replaceCard(c,ioCard);},false));
+  if(v['A.ioNA'])b.appendChild(fld('How do you know?',null,inp('A.ioNAwhy','e.g., no I&O order; primary nurse confirmed')));
+  else{const g=el('div','grid g2');g.append(fld('Intake this shift','mL · oral + tube + IV',inp('A.in','e.g., 1,100 mL (oral 840, IV 260)')),fld('Output this shift','mL · urine, drains, emesis',inp('A.out','e.g., 950 mL urine; JP drain 30 mL serosanguineous')));b.appendChild(g);}
+  const d=devList();
+  if(d.length)d.forEach(x=>b.appendChild(fld(x+' — status at end of shift',null,inp('A.dev.'+x,DEV[x]))));
+  else b.appendChild(el('div','info','Lines and devices you check under <b>Treatments &amp; therapy</b> on the Background tab appear here to report on.'));
+  b.appendChild(fieldEl({k:'A.devOther',l:'Any other line, drain, or device',h:'optional',t:'text',ph:'e.g., JP drain left hip, compressed, 30 mL this shift'}));
+  return c;
+}
+
+/* ---------- Recommendation = end-of-shift handoff (v4) ---------- */
+const RLINES=[
+ ['safe','Safety','What must continue to keep my patient safe?','continue fall precautions: bed low and locked, chair alarm on, call light in reach','my patient is a high fall risk: walker, moderate assist, and tried to get up alone at 1400'],
+ ['fu','Follow-up','What still needs the provider, an order, or a result?','the primary nurse follow up with the provider on this morning’s potassium of 3.2','my patient takes furosemide and reported leg cramps at 1200'],
+ ['mon','Monitor','What should the next nurse recheck, and when?','recheck BP at 2000','BP rose from 128/76 at 0800 to 152/90 at 1600'],
+ ['pt','Patient needs','Comfort, teaching, family, or discharge needs','reinforce walker teaching before discharge','my patient said “I forget to take it to the bathroom”']
+];
+function becMin(){return week()>=3?25:15;}
+const PRI='First priority: ';
+function trunc(t,n){t=String(t||'').trim().replace(/\s+/g,' ');return t.length>n?t.slice(0,n-1)+'…':t;}
+function cueList(){
+  const v=V();const L=[];
+  if(len(v['S.concern']))L.push(PRI+trunc(v['S.concern'],70));
+  abnList().forEach(a=>L.push(a.s.t+': '+a.val));immediateTriggers().forEach(x=>L.push(x));
+  [1,2,3].forEach(n=>{const k='B.lab'+n;if(v[k]&&(v[k+'f']==='High'||v[k+'f']==='Low'))L.push(labName(n)+' '+(v[k+'v']||'')+' ('+v[k+'f'].toLowerCase()+(v[k+'t']&&v[k+'t']!=='First value'?', '+v[k+'t']:'')+')');});
+  if(['Moderate risk','High risk'].includes(v['A.mob.fall']))L.push('Fall risk: '+v['A.mob.fall'].toLowerCase());
+  if(v['A.ha']==='Yes'&&len(v['A.haWhich']))L.push('High-alert medication: '+trunc(v['A.haWhich'],45));
+  (v['A.safety']||[]).forEach(x=>L.push('Safety risk: '+x));
+  if(v['E.base']&&v['E.base']!=='Same')L.push('Since this morning: '+v['E.base'].toLowerCase());
+  const c=vsCompare();if(c)L.push('Vital signs: '+c);
+  return Array.from(new Set(L));
+}
+function recoCues(id){const L=cueList();return (V()['R.'+id+'Cues']||[]).filter(x=>L.includes(x));}
+function recoDone(id){
+  const v=V();if(v['R.'+id+'None'])return len(v['R.'+id+'B'])>=10;
+  const cue=recoCues(id).length>0||len(v['R.'+id+'Other'])>=5;
+  const when=id!=='mon'||len(v['R.monWhen'])>=3;
+  return len(v['R.'+id])>=8&&len(v['R.'+id+'B'])>=becMin()&&cue&&when;
+}
+function priorityLinked(){return RLINES.some(([id])=>!V()['R.'+id+'None']&&recoCues(id).some(x=>x.startsWith(PRI)));}
+function recoLine([id,name,q,exR,exB]){
+  const c=el('div','card reco');c.id='reco_'+id;const v=V();const none=!!v['R.'+id+'None'];
+  const st=el('span','req'+(recoDone(id)?' done':''),recoDone(id)?'Complete':'Required');
+  const hd=el('div','sh');hd.style.cssText='display:flex;justify-content:space-between;align-items:baseline;gap:8px';hd.append(el('h3',null,esc(name)),st);c.appendChild(hd);
+  c.appendChild(el('div','h',esc(q)));
+  const upd=()=>{const d=recoDone(id);st.className='req'+(d?' done':'');st.textContent=d?'Complete':'Required';};
+  c.appendChild(chipGroup(['Nothing to recommend here'],()=>v['R.'+id+'None']?'Nothing to recommend here':'',x=>{setV('R.'+id+'None',!!x);c.replaceWith(recoLine([id,name,q,exR,exB]));refreshLive();},false));
+  const fr=el('div','rframe');
+  const mk=(k,ph)=>{const t=el('textarea');t.rows=2;t.value=v[k]||'';t.placeholder=ph;return t;};
+  if(!none){const r=mk('R.'+id,exR);r.addEventListener('input',()=>{setV('R.'+id,r.value);upd();});fr.append(el('span',null,'I recommend'),r);}
+  if(!none&&id==='mon'){const w=el('input');w.type='text';w.value=v['R.monWhen']||'';w.placeholder='e.g., at 2000, then every 4 hours';w.addEventListener('input',()=>{setV('R.monWhen',w.value);upd();});fr.append(el('span',null,'When / how often'),w);}
+  const bc=mk('R.'+id+'B',none?'e.g., no labs or orders are pending':exB);let lb=lintBox(bc.value);
+  bc.addEventListener('input',()=>{setV('R.'+id+'B',bc.value);upd();const x=lintBox(bc.value);fr.replaceChild(x,lb);lb=x;});
+  fr.append(el('span',null,none?'Nothing here because':'because'),bc,el('span'),lb);
+  c.appendChild(fr);
+  if(!none){
+    const L=cueList();const cw=el('div','field');cw.style.marginTop='10px';
+    cw.appendChild(el('div','lab','This is based on<span class="h">tap at least one cue from S, B, or A, or name another finding you observed</span>'));
+    if(L.length)cw.appendChild(chipGroup(L,()=>V()['R.'+id+'Cues'],x=>{setV('R.'+id+'Cues',x);upd();},true));
+    else cw.appendChild(el('div','info','Your cues appear here as you complete S, B, and A.'));
+    const o=el('input');o.type='text';o.value=v['R.'+id+'Other']||'';o.placeholder='Another finding I observed (optional if you tapped a cue)';o.style.marginTop='8px';o.addEventListener('input',()=>{setV('R.'+id+'Other',o.value);upd();});
+    cw.appendChild(o);c.appendChild(cw);
+  }
+  return c;
+}
+function cueBlock(){
+  const w=el('div');w.dataset.live='prilink';drawPriLink(w);return w;
+}
+function drawPriLink(w){
+  w=w||document.querySelector('[data-live="prilink"]');if(!w)return;const v=V();
+  const pri=len(v['S.concern'])?esc(trunc(v['S.concern'],140)):'<i>Not written yet. Write it on the Situation tab first.</i>';
+  w.innerHTML='';w.appendChild(el('div',priorityLinked()?'okbox':'info','<b>Your first priority (from Situation):</b> '+pri+'<div style="margin-top:4px">'+(priorityLinked()?'At least one recommendation is based on it.':'At least one of your four recommendations must be based on this priority. Tap “First priority” as a cue on that line.')+'</div>'));
+}
+function legacyR(){
+  const v=V();const old=[['Request',v['R.what']?'I am requesting '+v['R.what']+' for '+(v['R.for']||'—')+' by '+(v['R.by']||'—'):''],['Because',v['R.because']],['Follow-up',v['R.follow']],['Key item passed on',v['E.handKey']]].filter(x=>len(x[1]));
+  if(!old.length)return el('div');
+  return el('div','card','<h3>Saved before the update</h3><div class="h">You wrote this on the earlier version of the Recommendation tab. Use it to write the four lines below. It still prints on your PDF.</div>'+old.map(x=>'<p><b>'+esc(x[0])+':</b> '+esc(x[1])+'</p>').join(''));
+}
+function reportBlock(){
+  const c=el('div','card');c.appendChild(el('h3',null,'Give your report'));
+  c.appendChild(el('div','h','Read your SBAR to your instructor, in order, as if your instructor is the nurse taking over your patient. Aim for 3 to 5 minutes.'));
+  const g=el('div','grid g2');g.append(fld('SBAR report given to my instructor at','military time',timeIn('R.reportT',null,()=>refreshLive())),fld('Handoff given to the primary nurse at','if you also reported to the primary nurse',timeIn('E.handTime')));
+  c.appendChild(g);return c;
 }
 function detectedBlock(){
   const w=el('div');w.dataset.live='rdetect';return w;
@@ -610,20 +769,25 @@ const SECTIONS=[
   {k:'meta.age',l:'Patient age range',t:'radio',o:['60–69','70–79','80–89','90+']},
   {k:'meta.sex',l:'Patient sex',t:'radio',o:['M','F']},
   {t:'custom',render:()=>{const d=el('div','info');d.dataset.live='weekrules';return d;}},
-  {t:'note',html:'<b>Sequence.</b> S, B, A from bedside report → Clinical Reasoning Moment → chart/MAR review + Medication Prep → write R → report to your instructor in S-B-A-R order → round every 2 hours and chart DAR → end-of-shift handoff → Reflection Journal → save your PDF and upload it to Blackboard.'},
+  {t:'note',html:'<b>Your SBAR is your end-of-shift report.</b> At the end of the shift you give report to your instructor as if your instructor is the nurse taking over your patient. Build it all day, so it is ready when you report.'},
+  {t:'note',html:'<b>Sequence.</b> Morning: S, B, and your head-to-toe on A → Clinical Reasoning Moment → chart/MAR review + Medication Prep. All day: round every 2 hours and chart DAR; add lab values and medications given on A. End of shift: update “How my patient is now” on S and the last set of vital signs on A → write your 4 recommendations on R → give your SBAR report to your instructor → Reflection Journal → save your PDF and upload it to Blackboard.'},
   {t:'note',html:'<b>Skipping an area.</b> Any area except this tab can be skipped only with your instructor’s permission. Your instructor enters their initials and the reason, and it prints on your PDF.'}
  ]},
- {id:'S',L:'S',short:'Situation',title:'Situation',skip:'S',sub:'Who the patient is (age range and sex only), current condition, and the immediate concern.',fields:[
+ {id:'S',L:'S',short:'Situation',title:'Situation',skip:'S',sub:'Who the patient is (age range and sex only), how they looked this morning, how they are now, and the one thing the oncoming nurse must hear first.',fields:[
   {k:'S.code',l:'Code status',t:'radio',o:['Full','DNR','Other']},
   {k:'S.codeOther',l:'If other, describe',t:'text',show:v=>v['S.code']==='Other'},
   {k:'S.mpoa',l:'Advance directive / MPOA',t:'radio',o:['Y','N']},
   {k:'S.iso',l:'Isolation',t:'checks',o:['Standard','Contact','C. diff / Enteric','Droplet','Airborne']},
   {t:'custom',render:allergyBlock},
-  {k:'S.cond',l:'Current condition',h:'How does the patient look right now?',t:'radio',o:['Stable','Needs watching','Unstable']},
+  {k:'S.cond',l:'Condition this morning',h:'How did the patient look when you started?',t:'radio',o:['Stable','Needs watching','Unstable']},
   {k:'S.condWhy',l:'What tells you that?',t:'area',rows:2,lint:'data',ph:'I can tell because …'},
-  {k:'S.concern',l:'Immediate concern',h:'The one thing your instructor must hear first.',t:'area',rows:2,ph:'The most important thing right now is …'}
+  {t:'card',title:'End of shift — how my patient is now',f:[
+   {t:'note',html:'Complete this just before you give report.'},
+   {t:'grid',cols:2,f:[{k:'E.loc',l:'Where my patient is now',t:'select',o:DISP},{k:'E.base',l:'Compared with this morning',t:'select',o:BASE}]},
+   {k:'E.disp',l:'What changed today, and what did not?',t:'area',rows:3,lint:'data',ph:'Since this morning, my patient …'}]},
+  {k:'S.concern',l:'The one thing the oncoming nurse must hear first',t:'area',rows:2,ph:'The most important thing about my patient right now is …'}
  ]},
- {id:'B',L:'B',short:'Background',title:'Background',skip:'B',sub:'Diagnosis, relevant history, baseline status, recent events, treatments, and important results.',fields:[
+ {id:'B',L:'B',short:'Background',title:'Background',skip:'B',sub:'Diagnosis, relevant history, baseline status, recent events, and treatments.',fields:[
   {t:'grid',cols:2,f:[
    {k:'B.dxCat',l:'Reason for rehab',t:'select',o:DX},
    {k:'B.dx',l:'Exact diagnosis',h:'as written in the chart',t:'text'}]},
@@ -637,9 +801,9 @@ const SECTIONS=[
   {k:'B.recent',l:'Recent events (last 24 h)',t:'checks',o:RECENT.concat(['None reported']),none:'None reported'},
   {k:'B.recentD',l:'Describe',t:'text',show:v=>(v['B.recent']||[]).some(x=>x!=='None reported')},
   {k:'B.tx',l:'Treatments & therapy today',t:'checks',o:TX.concat(['None']),none:'None'},
-  {t:'custom',render:labsBlock}
+  {t:'note',html:'<b>Lab values moved.</b> Record them on the Assessment tab, with what they mean for your patient.'}
  ]},
- {id:'A',L:'A',short:'Assessment',title:'Assessment',sub:'Choose what you observed. Nothing is pre-filled. Any abnormal choice asks you to describe it and say whether it is new.',custom:'assess'},
+ {id:'A',L:'A',short:'Assessment',title:'Assessment',sub:'Vital signs, head-to-toe, lab values with what they mean, and medications given. Choose what you observed. Nothing is pre-filled. Any abnormal choice asks you to describe it and say whether it is new.',custom:'assess'},
  {id:'CR',L:'★',short:'Reasoning',title:'Clinical Reasoning Moment',skip:'CR',sub:'CJMM: Recognize Cues → Analyze Cues. From verbal report only — before you open the chart.',fields:[
   {k:'CR.q1',l:'Q1  Recognize Cues',h:'What concerns you most and why? Name the specific finding or statement.',t:'area',ph:'I am most concerned about … because …'},
   {k:'CR.q2a',l:'Q2  Verify in the chart #1',h:'and why it cannot wait',t:'area',rows:2,ph:'I need to check … because …'},
@@ -653,18 +817,16 @@ const SECTIONS=[
   {t:'card',title:'Medication 1',f:medFields(1)},
   {t:'card',title:'Medication 2 (optional)',f:medFields(2)}
  ]},
- {id:'R',L:'R',short:'Recommendation',title:'Recommendation',skip:'R',sub:'You request — your instructor and the primary nurse act.',fields:[
-  {t:'custom',render:detectedBlock},
-  {k:'R.manual',l:'Anything else urgent right now?',h:'check only if it is happening',t:'checks',o:MANUAL_TRIG,trig:true,after:()=>drawDetected()},
-  {k:'R.type',l:'I am requesting',t:'checks',o:['Action','Clarification','Assessment','Order (instructor relays to primary nurse)','Support / supervision']},
-  {t:'custom',render:requestFrame},
-  {t:'custom',render:becauseBlock},
-  {k:'R.follow',l:'Follow-up',h:'what I will look for when I reassess',t:'area',rows:2},
-  {k:'R.followTime',l:'Reassess at',h:'adds a reminder; chart it as a round and mark it “Linked: my R follow-up”',t:'time'},
-  {k:'R.loop',l:'Closed loop',t:'checks',o:['Instructor read back my request','Plan confirmed','Primary nurse informed']}
- ]},
  {id:'N',L:'N',short:'Rounds',title:'Nurse’s Notes · Rounding Log',sub:'Round on your patient every 2 hours. Chart each round in DAR format (Timby Ch. 9, focus charting) as soon as you leave the room. Student learning record — not part of the medical record.',custom:'rounds'},
- {id:'E',L:'✓',short:'End of shift',title:'End of Shift · Disposition + Handoff',skip:'E',sub:'1730–1800. Compare how your patient is now with how they were this morning.',custom:'end'},
+ {id:'R',L:'R',short:'Recommendation',title:'Recommendation · End-of-Shift Report',skip:'R',sub:'End of shift. Your instructor is the nurse taking over your patient. Tell them what to continue, what to follow up, what to watch, and what your patient needs. One line each: I recommend … because …',fields:[
+  {t:'custom',render:cueBlock},
+  {t:'custom',render:legacyR},
+  {t:'custom',render:()=>recoLine(RLINES[0])},
+  {t:'custom',render:()=>recoLine(RLINES[1])},
+  {t:'custom',render:()=>recoLine(RLINES[2])},
+  {t:'custom',render:()=>recoLine(RLINES[3])},
+  {t:'custom',render:reportBlock}
+ ]},
  {id:'J',L:'J',short:'Reflection',title:'Reflection Journal',skip:'J',sub:'Gibbs Reflective Cycle. Write in first person, like a journal. There are no wrong feelings. You are graded on honesty and thinking, not on how the day went. Say “my patient” — no name, initials, room, or date.',fields:[
   {k:'J.what',l:'1  What happened today',h:'What did I do, step by step? What care did I give, what did I see, who did I work with?',t:'area',rows:5,ph:'I started my shift by …'},
   {k:'J.feelS',l:'2  How I felt — start of shift',t:'checks',o:FEEL_S},
@@ -675,6 +837,8 @@ const SECTIONS=[
    {k:'J.hard',l:'3  What was hard',h:'One moment that was difficult, confusing, or uncomfortable.',t:'area',rows:3,ph:'It was hard when …'}]},
   {k:'J.why',l:'4  Why it went that way',h:'What helped me? What got in the way? What would a more experienced nurse have done differently?',t:'area',rows:3},
   {k:'J.learned',l:'5  What I learned',h:'About nursing, my patient’s needs, or myself. Name one thing from Timby or class I used today.',t:'area',rows:3,ph:'Today I learned … I used … from Timby/class when …'},
+  {t:'custom',render:()=>el('div','info','<b>Your morning hypothesis (Clinical Reasoning Q3):</b> '+esc((V()['CR.sick']?V()['CR.sick']+' — ':'')+(V()['CR.q3']||'not written'))) },
+  {k:'E.cjmm',l:'Clinical judgment check: was my morning hypothesis right?',h:'CJMM Evaluate Outcomes. Which cue confirmed or changed it?',t:'area',rows:3,ph:'My hypothesis was … It was confirmed / changed when …'},
   {k:'J.plan',l:'6  My plan for next clinical day',h:'One specific goal, how I will practice it, and what support I need from my instructor.',t:'area',rows:3,ph:'Next time I will … I will practice by … I need my instructor to …'},
   {t:'note',html:'<b>If something from today is still on your mind,</b> tell your instructor before you leave. Hard days are part of learning to be a nurse, and you do not have to carry them alone.'}
  ]},
@@ -685,8 +849,13 @@ const SECTIONS=[
 function renderAssess(host){
   host.appendChild(el('div','info','<b>How to use this tab.</b> Pick what you actually saw, heard, or measured. Tap <b>What is normal?</b> if you are unsure. '+(week()>=3?'All systems are required this week.':'Weeks 1–2: Neuro, Respiratory, GI/Swallow, Skin, Mobility, and Pain are required. Cardio and GU are optional practice.')));
   const al=el('div');al.dataset.live='rdetect';host.appendChild(al);
+  renderFields([{k:'R.manual',l:'Anything else urgent right now?',h:'check only if it is happening · escalate now, do not wait for end of shift',t:'checks',o:MANUAL_TRIG,trig:true,after:()=>drawDetected()}],host);
   host.appendChild(vsCard());
   SYS.forEach(s=>host.appendChild(sysCard(s)));
+  host.appendChild(labsCard());
+  host.appendChild(medsGivenCard());
+  host.appendChild(vs2Card());
+  host.appendChild(ioCard());
   const ch=el('div','card');ch.appendChild(el('h3',null,'Change from baseline'));
   const pl=el('div');pl.dataset.live='newlist';ch.appendChild(pl);
   const t=el('textarea');t.rows=3;t.value=V()['A.change']||'';t.placeholder='Compared with baseline, my patient is now … The most important difference is …';let lb=lintBox(t.value,'data');
@@ -695,7 +864,7 @@ function renderAssess(host){
   renderFields([{k:'A.safety',l:'Safety risks',t:'checks',o:SAFETY}],host);
 }
 function vsCard(){
-  const c=el('div','sys');c.id='sys_vs';const h=el('div','sh');h.appendChild(el('h3',null,'Vital signs'));h.appendChild(el('span','req'+(vsDone()?' done':''),vsDone()?'Complete':'Required'));c.appendChild(h);
+  const c=el('div','sys');c.id='sys_vs';const h=el('div','sh');h.appendChild(el('h3',null,'Vital signs — morning set'));h.appendChild(el('span','req'+(vsDone()?' done':''),vsDone()?'Complete':'Required'));c.appendChild(h);
   const b=el('div','sb');c.appendChild(b);
   b.appendChild(skipControl('A.vs','Vital signs',()=>replaceCard(c,vsCard)));
   if(skipped('A.vs'))return c;
@@ -708,11 +877,30 @@ function vsCard(){
   b.appendChild(g);
   b.appendChild(fld('Compared with the last set in the chart',null,selectEl(['About the same','One or more values higher','One or more values lower','No earlier set to compare'],V()['A.trend'],x=>{setV('A.trend',x);replaceCard(c,vsCard);})));
   if(/higher|lower/.test(V()['A.trend']||''))b.appendChild(inp('A.trendWhich','Which value changed, and from what?',null,'e.g., HR 78 → 104'));
-  b.appendChild(el('details','tip','<summary>What is normal?</summary><p>Timby Ch. 12: adult pulse about 60–100 at rest; resting respirations about 14–18 (male) and 16–20 (female). Timby Ch. 21: normal SpO₂ is 95–100%; a sustained level below 90% needs action. Your notify parameters: SBP &lt; 90 or &gt; 180, HR &lt; 50 or &gt; 120, SpO₂ &lt; 90%, BG &lt; 70 or &gt; 300.</p>'));
+  b.appendChild(el('details','tip','<summary>What is normal?</summary><p>Timby Ch. 12: adult pulse about 60–100 at rest; resting respirations about 14–18 (male) and 16–20 (female). Timby Ch. 21: normal SpO₂ is 95–100%; a sustained level below 90% needs action. Your notify parameters: SBP &lt; 90 or &gt; 180, HR &lt; 50 or &gt; 120, RR &lt; 10 or &gt; 24, temperature 100.4°F or higher, SpO₂ &lt; 90%, BG &lt; 70 or &gt; 300, unless facility or order parameters differ. A new fever with faster breathing can be an early sign of infection or aspiration pneumonia.</p>'));
   function upd(){const r=c.querySelector('.req');if(r){r.className='req'+(vsDone()?' done':'');r.textContent=vsDone()?'Complete':'Required';}}
   return c;
 }
 function vsDone(){if(skipped('A.vs'))return true;const v=V();return ['A.bp','A.hr','A.rr','A.spo2','A.temp','A.o2'].every(k=>len(v[k]))&&!!v['A.trend'];}
+const VS2=[['bp','BP',null,'132/78'],['hr','HR','beats per minute','72'],['rr','RR','breaths per minute','18'],['spo2','SpO₂','%','95'],['temp','Temp','°F','98.4'],['bg','BG','if ordered','']];
+function vs2Done(){if(skipped('A.vs2'))return true;const v=V();return ['bp','hr','rr','spo2','temp'].every(k=>len(v['A2.'+k]))&&toMin(v['A2.t'])!=null;}
+function vsCompare(){const v=V();return VS2.filter(([k])=>len(v['A.'+k])&&len(v['A2.'+k])).map(([k,l])=>l+' '+v['A.'+k]+' → '+v['A2.'+k]).join(' · ');}
+function vs2Card(){
+  const c=el('div','sys');c.id='sys_vs2';const h=el('div','sh');h.appendChild(el('h3',null,'Vital signs — last set before report'));h.appendChild(el('span','req'+(vs2Done()?' done':''),vs2Done()?'Complete':'Required'));c.appendChild(h);
+  const b=el('div','sb');c.appendChild(b);
+  b.appendChild(skipControl('A.vs2','Last set of vital signs',()=>replaceCard(c,vs2Card)));
+  if(skipped('A.vs2'))return c;
+  const upd=()=>{const r=c.querySelector('.req');if(r){r.className='req'+(vs2Done()?' done':'');r.textContent=vs2Done()?'Complete':'Required';}const cm=c.querySelector('[data-cmp]');if(cm)cm.textContent=vsCompare()||'Enter both sets to see the change.';};
+  b.appendChild(el('div','h','Your most recent full set, taken in the afternoon. The oncoming nurse compares it with your morning set.'));
+  const lr=lastRoundVS();
+  if(lr){const cp=el('button','btn sm','Copy from my '+lr.time+' round');cp.type='button';cp.onclick=()=>{VS2.forEach(([k])=>{if(lr[k])S.v['A2.'+k]=lr[k];});S.v['A2.t']=lr.time;save();replaceCard(c,vs2Card);};b.appendChild(cp);}
+  const g=el('div','grid g3 vsg');
+  VS2.forEach(([k,l,hh,ph])=>{const i=el('input');i.type='text';i.value=V()['A2.'+k]||'';if(ph)i.placeholder=ph;i.addEventListener('input',()=>{setV('A2.'+k,i.value);upd();});g.appendChild(fld(l,hh,i));});
+  g.appendChild(fld('Taken at','military time',timeIn('A2.t',null,upd)));
+  b.appendChild(g);
+  const cm=el('div','info');cm.appendChild(el('b',null,'Morning → last set: '));const sp=el('span');sp.dataset.cmp='1';sp.textContent=vsCompare()||'Enter both sets to see the change.';cm.appendChild(sp);b.appendChild(cm);
+  return c;
+}
 function sysDone(s){
   if(skipped('A.'+s.id))return true;const v=V();
   if(!v['A.'+s.id+'.src']||!v['A.'+s.id+'.src'].length)return false;
@@ -828,7 +1016,7 @@ function renderDraft(t,b){
   nf.appendChild(fld('Did you report anything this round?',null,chipGroup(['No','Yes'],()=>d.notify,v=>{set('notify',v);nt.hidden=v!=='Yes';},false)));
   [['instT','Instructor told at'],['rnT','Primary nurse told at']].forEach(([k,l])=>{const row=el('div','timein');const i=el('input');i.type='text';i.inputMode='numeric';i.maxLength=4;i.placeholder='HHMM';i.value=d[k]||'';i.addEventListener('input',()=>{i.value=i.value.replace(/\D/g,'');set(k,i.value);});const bb=el('button','btn sm','Now');bb.type='button';bb.onclick=()=>{i.value=nowHHMM();set(k,i.value);};row.append(i,bb);nt.appendChild(fld(l,null,row));});
   nf.appendChild(nt);
-  nf.appendChild(fld('Linked','this round also completes',chipGroup(['My R follow-up','Med response'],()=>d.linked,v=>set('linked',v),true)));
+  nf.appendChild(fld('Linked','this round also completes',chipGroup(['Med response'],()=>d.linked,v=>set('linked',v),true)));
   b.appendChild(nf);
   const sig=el('input');sig.type='text';sig.placeholder='First Last, SVN';sig.value=d.sig||(V()['meta.student']?V()['meta.student']+', SVN':'');d.sig=sig.value;sig.addEventListener('input',()=>set('sig',sig.value));
   b.appendChild(fld('Signature','name + SVN',sig));
@@ -881,24 +1069,6 @@ function renderLocked(t,b){
   b.appendChild(el('div','locked','<p><span class="k">Disposition</span> '+esc(s.disp)+' · <span class="k">vs. baseline</span> '+esc(s.base)+'</p><p><span class="k">Notify</span> '+(s.notify==='Yes'?'Yes — instructor '+esc(s.instT||'—')+', primary nurse '+esc(s.rnT||'—'):'No')+((s.linked||[]).length?' · <span class="k">Linked</span> '+esc(s.linked.join(', ')):'')+'</p><p><span class="k">Signed</span> '+esc(s.sig)+' · charted '+esc(s.savedAt)+'</p>'));
 }
 
-/* ---------- end of shift ---------- */
-function renderEnd(host){
-  const v=V();const cmp=el('div','compare');
-  cmp.appendChild(el('div',null,'<b>This morning: current condition</b>'+esc((v['S.cond']||'—')+(v['S.condWhy']?' — '+v['S.condWhy']:''))));
-  cmp.appendChild(el('div',null,'<b>This morning: your Q3 hypothesis</b>'+esc((v['CR.sick']?v['CR.sick']+' — ':'')+(v['CR.q3']||'—'))));
-  const c=el('div','card');c.appendChild(el('h3',null,'Compare'));c.appendChild(cmp);host.appendChild(c);
-  renderFields([
-   {t:'grid',cols:2,f:[{k:'E.loc',l:'Where my patient is now',t:'select',o:DISP},{k:'E.base',l:'Compared with this morning’s baseline',t:'select',o:BASE}]},
-   {k:'E.disp',l:'What changed, and what did not?',t:'area',rows:3,lint:'data',ph:'Since this morning, my patient …'},
-   {k:'E.hand',l:'Handoff to primary nurse',t:'radio',o:['Given','Not given']},
-   {k:'E.handTime',l:'Handoff given at',t:'time',show:v=>v['E.hand']==='Given'},
-   {k:'E.handKey',l:'Key item I passed on, and anything left undone',t:'area',rows:2},
-   {k:'E.cjmm',l:'CJMM Evaluate Outcomes',h:'Was my Q3 hypothesis right? Which cue confirmed or changed it?',t:'area',rows:3,ph:'My hypothesis was … It was confirmed / changed when …'}
-  ],host);
-  const done=ROUNDS.filter(t=>S.rounds[t].status==='saved'),sk=ROUNDS.filter(t=>skipped('round.'+t)),open=ROUNDS.filter(roundOpen);
-  host.appendChild(el('div','info','<b>Rounds charted:</b> '+(done.join(', ')||'none')+(sk.length?' · <b>Skipped with permission:</b> '+sk.join(', '):'')+(open.length?' · <b>Still open:</b> '+open.join(', '):'')));
-}
-
 /* ---------- requirements ---------- */
 function reqs(){
   const v=V();const L=[];const add=(sec,label,ok)=>L.push({sec,label,ok});const t=minText();
@@ -908,8 +1078,9 @@ function reqs(){
     add('S','Situation: code status',!!v['S.code']);
     add('S','Situation: isolation',(v['S.iso']||[]).length>0);
     add('S','Situation: allergies (NKDA, or each allergy with its reaction)',!!v['S.nkda']||([1,2,3].some(n=>len(v['S.al'+n]))&&[1,2,3].every(n=>!len(v['S.al'+n])||!!v['S.alr'+n])));
-    add('S','Situation: current condition and what tells you that',!!v['S.cond']&&len(v['S.condWhy'])>=t);
-    add('S','Situation: immediate concern',len(v['S.concern'])>=t);
+    add('S','Situation: condition this morning and what tells you that',!!v['S.cond']&&len(v['S.condWhy'])>=t);
+    add('S','Situation: how my patient is now (where, compared with this morning, what changed)',!!v['E.loc']&&!!v['E.base']&&len(v['E.disp'])>=t);
+    add('S','Situation: the one thing the oncoming nurse must hear first',len(v['S.concern'])>=t);
   }
   if(!skipped('B')){
     add('B','Background: reason for rehab and exact diagnosis',!!v['B.dxCat']&&len(v['B.dx'])>2);
@@ -918,6 +1089,11 @@ function reqs(){
   }
   add('A','Assessment: vital signs',vsDone());
   SYS.forEach(s=>{if(sysRequired(s))add('A','Assessment: '+s.t,sysDone(s));});
+  add('A','Assessment: lab values with what they mean for my patient',labsDone());
+  if(medsRequired()||[1,2].some(n=>len(v['M'+n+'.name'])))add('A','Assessment: medications given (time and response, or why held)',medsGivenDone());
+  add('A','Assessment: high-alert medications (anticoagulant, insulin, opioid) — yes with what to watch, or no',haDone());
+  add('A','Assessment: last set of vital signs before report',vs2Done());
+  add('A','Assessment: intake, output, lines, and devices at end of shift',ioDone());
   add('A','Assessment: change from baseline',len(v['A.change'])>=t);
   {const tr=immediateTriggers();if(tr.length)add('A','Notify: time you told your instructor and the primary nurse ('+tr.join(', ')+') — cannot be skipped',toMin(v['R.instT'])!=null&&toMin(v['R.rnT'])!=null);}
   if(!skipped('CR')){add('CR','Clinical Reasoning: Q1',len(v['CR.q1'])>=t);add('CR','Clinical Reasoning: Q2 (at least one)',len(v['CR.q2a'])>=t);add('CR','Clinical Reasoning: Q3 rating and hypothesis',!!v['CR.sick']&&len(v['CR.q3'])>=t);if(week()>=3)add('CR','Clinical Reasoning: most urgent problem',len(v['CR.priority'])>=t);}
@@ -928,12 +1104,12 @@ function reqs(){
     add('Rx','Medication 1: decision, adverse effects, teaching',!!v[p+'decision']&&len(v[p+'adverse'])>2&&len(v[p+'teach'])>=t);
     if(v[p+'decision']==='Give')add('Rx','Medication 1: all rights checked',RIGHTS.every(x=>(v[p+'rights']||[]).includes(x)));
   }
-  if(!skipped('R')){
-    add('R','Recommendation: what you are requesting',(v['R.type']||[]).length>0&&len(v['R.what'])>2&&len(v['R.for'])>2&&len(v['R.by'])>1);
-    add('R','Recommendation: because',len(v['R.because'])>=t);
-  }
   ROUNDS.forEach(r=>add('N','Rounds: '+r+' charted or skipped with permission',!roundOpen(r)));
-  if(!skipped('E'))add('E','End of shift: where the patient is, compared with baseline, what changed, handoff',!!v['E.loc']&&!!v['E.base']&&len(v['E.disp'])>=t&&!!v['E.hand']);
+  if(!skipped('R')){
+    RLINES.forEach(([id,name])=>add('R','Recommendation: '+name+' — I recommend … because …, based on a cue'+(id==='mon'?', with when or how often':'')+' (or nothing here, because …)',recoDone(id)));
+    add('R','Recommendation: at least one line based on your first priority from Situation',priorityLinked());
+    add('R','Recommendation: time you gave your SBAR report to your instructor',toMin(v['R.reportT'])!=null);
+  }
   if(!skipped('J'))['J.what','J.well','J.hard','J.why','J.learned','J.plan'].forEach((k,i)=>add('J','Reflection: box '+['1','3 (went well)','3 (was hard)','4','5','6'][i],len(v[k])>=t));
   return L;
 }
@@ -980,7 +1156,7 @@ function cell(label,hint,body,span,cls){return '<td'+(span>1?' colspan="'+span+'
 function tbl(cols,rows){return '<table class="pt avoid"><colgroup>'+'<col>'.repeat(cols)+'</colgroup>'+rows.map(r=>'<tr>'+r+'</tr>').join('')+'</table>';}
 function secH(L,t,sub){return '<div class="psec"><span class="L">'+L+'</span>'+t+'</div>'+(sub?'<div class="psub">'+sub+'</div>':'');}
 function skipRow(id,cols){const s=S.skips[id];return s?tbl(1,[cell('<span class="skp">SKIPPED WITH INSTRUCTOR PERMISSION</span>','','<div class="pv">Approved by '+esc(s.initials)+' at '+esc(s.at)+' — '+esc(s.reason)+'</div>',1)]):'';}
-const FOOT='<div class="pfoot">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.06.2026 · Student learning record — not part of the medical record</div>';
+const FOOT='<div class="pfoot">Developed by The AI Nurse Professor™ — Dr. Fiona P. White, DNP, MSN, RN · 11.20.2026 · v4.1 · Student learning record — not part of the medical record</div>';
 function sysPrint(s){
   const v=V();if(S.skips['A.'+s.id])return cell(esc(s.t),'','<div class="skp">Skipped with instructor permission — '+esc(S.skips['A.'+s.id].initials)+' at '+esc(S.skips['A.'+s.id].at)+': '+esc(S.skips['A.'+s.id].reason)+'</div>',3);
   if(!sysRequired(s)&&!s.f.some(f=>v[fk(s,f)]))return cell(esc(s.t),'','<div class="ph2">Not assessed — optional this week.</div>',3);
@@ -1013,52 +1189,64 @@ function roundPrint(t){
 function buildPrint(){
   const v=V();let h='';
   const allergies=v['S.nkda']?'No known drug allergies (NKDA)':[1,2,3].filter(n=>len(v['S.al'+n])).map(n=>v['S.al'+n]+' — '+(v['S.alr'+n]||'reaction not recorded')).join('; ');
-  h+='<div class="pp"><div class="ph"><b>SBAR CLINICAL REPORT SHEET</b><span>Start-of-Day Capture · Report to Instructor · q2h Nurse’s Notes</span></div><div class="psub">San Jacinto College South · VNSG 1260 Clinical I · Section '+esc(v['meta.section']||'___')+'</div>';
+  h+='<div class="pp"><div class="ph"><b>SBAR CLINICAL REPORT SHEET</b><span>End-of-Shift Report to Instructor · q2h Nurse’s Notes · Reflection</span></div><div class="psub">San Jacinto College South · VNSG 1260 Clinical I · Section '+esc(v['meta.section']||'___')+' · Report given to instructor at <b>'+esc(v['R.reportT']||'____')+'</b></div>';
   h+=tbl(3,[cell('Student','',pv('meta.student'))+cell('Clinical Week #','',pv('meta.week'))+cell('Patient:','',' Age range '+pc('meta.age',['60–69','70–79','80–89','90+'])+'&nbsp;&nbsp; Sex '+pc('meta.sex',['M','F']))]);
   h+='<div class="pnote"><b>NO PATIENT IDENTIFIERS.</b> Record age range and sex only — no name, initials, room/bed, dates, MRN, or physician names.</div>';
   h+=secH('S','SITUATION')+skipRow('S');
   if(!S.skips.S)h+=tbl(2,[cell('Code status','','<div>'+pc('S.code',['Full','DNR','Other'])+(v['S.codeOther']?' — '+esc(v['S.codeOther']):'')+' &nbsp; Advance directive / MPOA '+pc('S.mpoa',['Y','N'])+'</div>')+cell('Isolation','','<div>'+pc('S.iso',['Standard','Contact','C. diff / Enteric','Droplet','Airborne'])+'</div>'),
     cell('Allergies + reaction','',pt(allergies),2),
-    cell('Current condition','','<div>'+pc('S.cond',['Stable','Needs watching','Unstable'])+'</div>'+pv('S.condWhy'),2),
-    cell('Immediate concern','',pv('S.concern'),2)]);
+    cell('Condition this morning','','<div>'+pc('S.cond',['Stable','Needs watching','Unstable'])+'</div>'+pv('S.condWhy'))+cell('How my patient is now','',pt((v['E.loc']||'—')+' · compared with this morning: '+(v['E.base']||'—'))+pv('E.disp')),
+    cell('The one thing the oncoming nurse must hear first','',pv('S.concern'),2)]);
   h+=secH('B','BACKGROUND')+skipRow('B');
-  if(!S.skips.B){const labs=[1,2,3].filter(n=>v['B.lab'+n]).map(n=>v['B.lab'+n]+' '+(v['B.lab'+n+'v']||'')+' ('+(v['B.lab'+n+'f']||'—')+', '+(v['B.lab'+n+'t']||'—')+')').join(' · ');
-    h+=tbl(2,[cell('Reason for rehab','',pt(v['B.dxCat']))+cell('Exact diagnosis','',pv('B.dx')),
+  if(!S.skips.B)h+=tbl(2,[cell('Reason for rehab','',pt(v['B.dxCat']))+cell('Exact diagnosis','',pv('B.dx')),
     cell('Relevant history','',pt((v['B.hx']||[]).join(', '))+(v['B.hxImpact']?'<div class="pv">Changes today’s care: '+esc(v['B.hxImpact'])+'</div>':''),2),
     cell('Baseline status','before this illness','<div>Cognition: '+pc('B.cog',['Intact','Mild impairment','Dementia','Unknown'])+' &nbsp; Function: '+pc('B.func',['Independent','Needed assist','Dependent'])+'</div><div>Lived: '+pc('B.lived',['Alone','With family','ALF / LTC'])+' &nbsp; Aids: '+pc('B.aids',['Glasses','Hearing aids','Dentures','Interpreter needed'])+'</div>',2),
-    cell('Recent events','',pt((v['B.recent']||[]).join(', ')+(v['B.recentD']?' — '+v['B.recentD']:'')))+cell('Treatments & therapy','',pt((v['B.tx']||[]).join(', '))),
-    cell('Important results','',pt(labs),2)]);}
+    cell('Recent events','',pt((v['B.recent']||[]).join(', ')+(v['B.recentD']?' — '+v['B.recentD']:'')))+cell('Treatments & therapy','',pt((v['B.tx']||[]).join(', ')))]);
   h+=FOOT+'</div>';
   h+='<div class="pp">'+secH('A','ASSESSMENT','Abnormal findings are in bold with the student’s description and comparison with baseline.');
   if(S.skips['A.vs'])h+=skipRow('A.vs');else{const vt=vsTriggers(aVS());
-    h+=tbl(6,[cell('BP','',pv('A.bp'))+cell('HR','',pv('A.hr'))+cell('RR','',pv('A.rr'))+cell('SpO₂','',pt((v['A.spo2']||'')+(v['A.spo2']?'% ':'')+(v['A.o2']||'')+(v['A.o2L']?' '+v['A.o2L']+' L':'')))+cell('Temp / route','',pt((v['A.temp']||'')+' '+(v['A.troute']||'')))+cell('BG','',pv('A.bg')),
+    h+=tbl(6,[cell('MORNING SET &nbsp;BP','',pv('A.bp'))+cell('HR','',pv('A.hr'))+cell('RR','',pv('A.rr'))+cell('SpO₂','',pt((v['A.spo2']||'')+(v['A.spo2']?'% ':'')+(v['A.o2']||'')+(v['A.o2L']?' '+v['A.o2L']+' L':'')))+cell('Temp / route','',pt((v['A.temp']||'')+' '+(v['A.troute']||'')))+cell('BG','',pv('A.bg')),
       cell('Compared with last set in chart','',pt((v['A.trend']||'')+(v['A.trendWhich']?' — '+v['A.trendWhich']:''))+(vt.length?'<div class="trig">Outside notify parameters: '+esc(vt.join(', '))+'</div>':''),6)]);}
+  if(S.skips['A.vs2'])h+=skipRow('A.vs2');else{const vt2=vsTriggers(aVS2());
+    h+=tbl(6,[cell('LAST SET at '+esc(v['A2.t']||'____')+' &nbsp;BP','',pv('A2.bp'))+cell('HR','',pv('A2.hr'))+cell('RR','',pv('A2.rr'))+cell('SpO₂','',pt((v['A2.spo2']||'')+(v['A2.spo2']?'%':'')))+cell('Temp','',pv('A2.temp'))+cell('BG','',pv('A2.bg')),
+      cell('Morning → last set','',pt(vsCompare())+(vt2.length?'<div class="trig">Outside notify parameters: '+esc(vt2.join(', '))+'</div>':''),6)]);}
   h+=tbl(3,SYS.map(s=>sysPrint(s)));
+  if(S.skips['A.labs'])h+=skipRow('A.labs');
+  else if(v['A.labsNone'])h+=tbl(1,[cell('Lab values','',pt('No lab results in the chart — '+(v['A.labsNoneWhy']||'')))]);
+  else{const rows=[1,2,3].filter(n=>v['B.lab'+n]).map(n=>{const k='B.lab'+n;return cell(esc(labName(n)),'','<div class="pv">'+esc(v[k+'v']||'—')+' &nbsp;(normal '+esc(v[k+'r']||'—')+')</div><div>'+esc(v[k+'f']||'—')+' · '+esc(v[k+'t']||'—')+'</div>')+cell('What it means for my patient · what I would watch or report','',pv(k+'m'),2);});
+    h+=tbl(3,rows.length?rows:[cell('Lab values','','<div class="ph2">not recorded</div>',3)]);}
+  {const mrow=[1,2].filter(n=>len(v['M'+n+'.name'])).map(n=>{const p='M'+n+'.';const given=v[p+'decision']==='Give';return cell(esc(v[p+'name']),'',pt(v[p+'dose']))+cell(given?'Given at '+esc(v[p+'givenT']||'____'):(v[p+'decision']?'HELD':'Decision not recorded'),'',given?pv(p+'resp'):pv(p+'holdWhy'),2);});
+    if(S.skips['A.meds'])h+=skipRow('A.meds');
+    else if(mrow.length||len(v['A.medsOther']))h+=tbl(3,[cell('MEDICATIONS GIVEN THIS SHIFT','','',3,'sh')].concat(mrow).concat(len(v['A.medsOther'])?[cell('Other medications that matter for report','',pv('A.medsOther'),3)]:[]));}
+  h+=tbl(1,[cell('High-alert medications','anticoagulant, insulin, opioid',pt(v['A.ha']==='Yes'?'Yes — '+(v['A.haWhich']||''):(v['A.ha']==='No'?'None on the MAR':'not answered')))]);
+  if(S.skips['A.io'])h+=skipRow('A.io');else h+=tbl(2,[cell('Intake this shift','',pt(v['A.ioNA']?'Not measured — '+(v['A.ioNAwhy']||''):(v['A.in']||'—')))+cell('Output this shift','',pt(v['A.ioNA']?'—':(v['A.out']||'—'))),
+    cell('Lines, drains, and devices at end of shift','',devList().map(d=>'<div class="pv"><b>'+esc(d)+':</b> '+esc(v['A.dev.'+d]||'not recorded')+'</div>').join('')+(len(v['A.devOther'])?'<div class="pv"><b>Other:</b> '+esc(v['A.devOther'])+'</div>':'')+(!devList().length&&!len(v['A.devOther'])?'<div class="pv">None</div>':''),2)]);
   h+=tbl(1,[cell('Change from baseline','This is your most important finding.',pv('A.change')),cell('Safety risks','','<div>'+pc('A.safety',SAFETY)+'</div>')]);
   const it=immediateTriggers();if(it.length)h+=tbl(1,[cell('<span class="trig">Notify-immediately triggers found</span>','',' '+esc(it.join(' · '))+' — instructor told at '+esc(v['R.instT']||'____')+', primary nurse at '+esc(v['R.rnT']||'____'))]);
+  h+=FOOT+'</div>';
+  h+='<div class="pp">'+secH('R','RECOMMENDATION · END-OF-SHIFT HANDOFF','To my instructor as the oncoming nurse. I recommend … because …')+skipRow('R');
+  if(!S.skips.R){
+    h+='<div class="pnote"><b>First priority (Situation):</b> '+esc(v['S.concern']||'____')+' &nbsp; '+(priorityLinked()?'Addressed in R.':'<span class="trig">Not linked to a recommendation.</span>')+'</div>';
+    h+=tbl(1,RLINES.map(([id,name])=>{const cues=recoCues(id).concat(len(v['R.'+id+'Other'])?['Observed: '+v['R.'+id+'Other']]:[]);
+      return cell(esc(name),'',v['R.'+id+'None']?'<div class="pv">Nothing to recommend here, because '+esc(v['R.'+id+'B']||'____')+'</div>':'<div class="pv"><b>I recommend</b> '+esc(v['R.'+id]||'____')+(id==='mon'?' <b>when</b> '+esc(v['R.monWhen']||'____'):'')+' <b>because</b> '+esc(v['R.'+id+'B']||'____')+'</div><div><b>Based on:</b> '+esc(cues.join(' · ')||'no cue selected')+'</div>');}));
+    const old=[['Request',v['R.what']?'I am requesting '+v['R.what']+' for '+(v['R.for']||'—')+' by '+(v['R.by']||'—'):''],['Because',v['R.because']],['Follow-up',v['R.follow']],['Key item passed on',v['E.handKey']]].filter(x=>len(x[1]));
+    if(old.length)h+=tbl(1,[cell('Written before the v4 update','',old.map(x=>'<div class="pv"><b>'+esc(x[0])+':</b> '+esc(x[1])+'</div>').join(''))]);
+    h+=tbl(2,[cell('SBAR report given to instructor at','',pt(v['R.reportT']||'____'))+cell('Handoff to primary nurse at','',pt(v['E.handTime']||'—')),
+      cell('Rounds:','',' '+ROUNDS.map(t=>(S.rounds[t].status==='saved'?'☒ ':(skipped('round.'+t)?'⊘ ':'☐ '))+t).join('&nbsp; ')+' &nbsp; (⊘ = skipped with permission) &nbsp;&nbsp; <b>Student signature, SVN</b> '+esc((v['meta.student']||'')+', SVN')+' &nbsp;&nbsp; <b>Instructor initials</b> ______',2)]);}
   h+=secH('★','CLINICAL REASONING MOMENT · CJMM: Recognize Cues → Analyze Cues','From verbal report only — before you open the chart.')+skipRow('CR');
   if(!S.skips.CR)h+=tbl(1,[cell('Q1 Recognize Cues','',pv('CR.q1')),cell('Q2 Verify in the chart','','<div class="pv">1. '+esc(v['CR.q2a']||'')+'</div><div class="pv">2. '+esc(v['CR.q2b']||'')+'</div>'),cell('Q3 Analyze Cues','How sick? '+pc('CR.sick',['Stable','Needs watching','Getting worse']),pv('CR.q3')+(v['CR.priority']?'<div class="pv"><b>Most urgent:</b> '+esc(v['CR.priority'])+'</div>':''))]);
   h+=FOOT+'</div>';
   h+='<div class="pp">'+secH('Rx','MEDICATION PREP · Maximum 2 medications',medsRequired()?'Required this week (Medication 1).':'Optional until Week 4.')+skipRow('Rx');
   if(!S.skips.Rx)h+=medPrint(1)+medPrint(2);
-  h+=secH('R','RECOMMENDATION','You request — your instructor and the primary nurse act.')+skipRow('R');
-  if(!S.skips.R)h+=tbl(2,[cell('I am requesting','','<div>'+pc('R.type',['Action','Clarification','Assessment','Order (instructor relays to primary nurse)','Support / supervision'])+'</div>',2),
-    cell('My specific request','',pt('I am requesting '+(v['R.what']||'____')+' for '+(v['R.for']||'____')+' by '+(v['R.by']||'____')+'.'),2),
-    cell('Because','',pt((v['R.cues']||[]).join('; '))+pv('R.because'))+cell('Follow-up','reassess at '+esc(v['R.followTime']||'____')+' — logged as a round',pv('R.follow')),
-    cell('Closed loop:','',' '+pc('R.loop',['Instructor read back my request','Plan confirmed','Primary nurse informed'])+' &nbsp;&nbsp; Instructor initials ______',2)]);
   h+=FOOT+'</div>';
   h+='<div class="pp">'+secH('N','NURSE’S NOTES · ROUNDING LOG &nbsp;<span style="color:#000;font-size:8pt">q2h rounding · Focus charting (DAR) · Timby Ch. 9</span>','Times are military. Late entries and corrections are labeled automatically; struck-through text is the original entry.');
   ROUNDS.forEach(t=>h+=roundPrint(t));
-  h+=secH('✓','END OF SHIFT · DISPOSITION + HANDOFF')+skipRow('E');
-  if(!S.skips.E)h+=tbl(2,[cell('Disposition at end of shift','',pt((v['E.loc']||'—')+' · compared with baseline: '+(v['E.base']||'—'))+pv('E.disp'),2),
-    cell('Handoff to primary nurse','',' '+pc('E.hand',['Given','Not given'])+' at '+esc(v['E.handTime']||'____')+pv('E.handKey'))+cell('CJMM Evaluate Outcomes','',pv('E.cjmm')),
-    cell('Rounds:','',' '+ROUNDS.map(t=>(S.rounds[t].status==='saved'?'☒ ':(skipped('round.'+t)?'⊘ ':'☐ '))+t).join('&nbsp; ')+' &nbsp; (⊘ = skipped with permission) &nbsp;&nbsp; <b>Student signature, SVN</b> '+esc((v['meta.student']||'')+', SVN')+' &nbsp;&nbsp; <b>Instructor initials</b> ______',2)]);
   h+=FOOT+'</div>';
   h+='<div class="pp">'+secH('J','REFLECTION JOURNAL &nbsp;<span style="color:#000;font-size:8pt">Gibbs Reflective Cycle · your day, in your own words</span>')+skipRow('J');
   if(!S.skips.J)h+=tbl(2,[cell('1 What happened today','',pv('J.what'),2),
     cell('2 How I felt','','<div>Start of shift: '+pc('J.feelS',FEEL_S)+'</div><div>End of shift: '+pc('J.feelE',FEEL_E)+'</div>'+pv('J.feelWhy'),2),
     cell('3 What went well','',pv('J.well'))+cell('3 What was hard','',pv('J.hard')),
-    cell('4 Why it went that way','',pv('J.why'),2),cell('5 What I learned','',pv('J.learned'),2),cell('6 My plan for next clinical day','',pv('J.plan'),2)]);
+    cell('4 Why it went that way','',pv('J.why'),2),cell('5 What I learned','',pv('J.learned'),2),cell('Clinical judgment check: was my morning hypothesis right?','CJMM Evaluate Outcomes',pv('E.cjmm'),2),cell('6 My plan for next clinical day','',pv('J.plan'),2)]);
   h+=FOOT+'</div>';
   h+='<div class="pp">'+secH('⏱','APPENDIX · ENTRY-TIME LOG AND SKIPS','Recorded automatically by the tool. Times only; no dates are stored.');
   h+='<table class="pt"><tr><td class="gr pl">Round</td><td class="gr pl">Round time stated</td><td class="gr pl">Charted at</td><td class="gr pl">Late entry</td><td class="gr pl">Corrections</td><td class="gr pl">Notify</td></tr>'+
@@ -1094,13 +1282,13 @@ function renderBand(){
   if(v['S.nkda'])add('NKDA');else{const al=[1,2,3].map(n=>v['S.al'+n]).filter(x=>len(x));if(al.length)add('Allergies: '+al.join(', '),true);}
   if(v['A.gi.liquids']&&v['A.gi.liquids']!=='Thin')add('Liquids: '+v['A.gi.liquids'],true);
   if(v['A.mob.prec']&&v['A.mob.prec']!=='None')add(v['A.mob.prec']+' precautions',true);
+  if(v['A.mob.fall']==='High risk')add('High fall risk',true);
   const fr=(v['A.safety']||[]).filter(x=>['Falls','Aspiration','Bleeding (anticoagulant)'].includes(x));if(fr.length)add(fr.join(' · ')+' risk',true);
 }
 function dueItems(){
   const it=[];const v=V();
   ROUNDS.forEach(t=>{const r=S.rounds[t];it.push({t,label:t+' round',short:'Round',st:r.status==='saved'?(r.saved.late?'late':'saved'):(skipped('round.'+t)?'missed':'open'),sub:r.status==='saved'?'charted '+r.saved.savedAt:(skipped('round.'+t)?'skipped with permission':'')});});
   const linked=x=>ROUNDS.some(t=>S.rounds[t].status==='saved'&&(S.rounds[t].saved.linked||[]).includes(x));
-  if(toMin(v['R.followTime'])!=null)it.push({t:v['R.followTime'],label:'R follow-up',st:linked('My R follow-up')?'saved':'open',sub:'from your Recommendation'});
   [1,2].forEach(n=>{const k='M'+n+'.evalTime';if(toMin(v[k])!=null)it.push({t:v[k],label:'Med '+n+' response',st:linked('Med response')?'saved':'open',sub:(v['M'+n+'.name']||'Medication '+n)});});
   return it.sort((a,b)=>toMin(a.t)-toMin(b.t));
 }
@@ -1119,10 +1307,10 @@ function renderNext(){
 }
 function refreshLive(){
   const a=document.querySelector('[data-live="vsA"]');
-  if(a){const t=immediateTriggers();a.innerHTML=t.length?'<div class="alert"><b>Notify your instructor AND the primary nurse immediately: '+esc(t.join(' · '))+'.</b>Unless facility or order parameters differ. Record the times on the Recommendation tab.</div>':'';}
+  if(a){const t=immediateTriggers();a.innerHTML=t.length?'<div class="alert"><b>Notify your instructor AND the primary nurse immediately: '+esc(t.join(' · '))+'.</b>Unless facility or order parameters differ. Record the times on the Assessment tab.</div>':'';}
   const w=document.querySelector('[data-live="weekrules"]');
   if(w){const k=week();w.innerHTML=k?'<b>Week '+k+' requirements.</b> '+(k>=3?'All assessment systems required; D-A-R and reflection boxes at least 40 characters.':'Neuro, Respiratory, GI/Swallow, Skin, Mobility, and Pain required; Cardio and GU optional; one clear sentence per box.')+' '+(k>=4?'Medication Prep (Medication 1) is required.':'Medication Prep is optional until Week 4.'):'Choose your clinical week to see what is required.';}
-  drawNewList();drawDetected();renderBand();renderRail();renderNext();
+  drawNewList();drawDetected();drawPriLink();renderBand();renderRail();renderNext();
   document.querySelectorAll('#tabs .dot').forEach((d,i)=>{d.className='dot '+secStatus(SECTIONS[i].id);});
 }
 function rerender(){
@@ -1136,7 +1324,6 @@ function rerender(){
     if(s.fields)renderFields(s.fields,sec);
     if(s.custom==='assess')renderAssess(sec);
     if(s.custom==='rounds')renderRounds(sec);
-    if(s.custom==='end')renderEnd(sec);
     if(s.custom==='export')renderExport(sec);
   }
   if(s.id==='setup'&&'Notification' in window){
